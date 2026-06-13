@@ -1,1 +1,14 @@
-<Solution />
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskManagementSystem.Api/TaskManagementSystem.Api.csproj" Id="40708f13-ede9-4cc6-a59b-e336796eebed" />
+    <Project Path="src/TaskManagementSystem.Application/TaskManagementSystem.Application.csproj" Id="bf5ccfe0-aff2-4aea-9580-93dc54b73fdc" />
+    <Project Path="src/TaskManagementSystem.Domain/TaskManagementSystem.Domain.csproj" Id="6a5bc500-d8cb-486d-9f64-b4564eac0027" />
+    <Project Path="src/TaskManagementSystem.Infrastructure/TaskManagementSystem.Infrastructure.csproj" Id="0a226ab4-6804-47a4-868d-2ccc4ad1c51d" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskManagementSystem.Api.UnitTests/TaskManagementSystem.Api.UnitTests.csproj" Id="6709d1e0-ed61-4380-9c5e-0139af129898" />
+    <Project Path="tests/TaskManagementSystem.Application.UnitTests/TaskManagementSystem.Application.UnitTests.csproj" Id="2ef9f70f-a9ba-40f1-b4da-b96a2cce44db" />
+    <Project Path="tests/TaskManagementSystem.Domain.UnitTests/TaskManagementSystem.Domain.UnitTests.csproj" Id="355b32ad-4bc5-43b6-8104-1668a0ef8193" />
+    <Project Path="tests/TaskManagementSystem.Infrastructure.UnitTests/TaskManagementSystem.Infrastructure.UnitTests.csproj" Id="225763a2-e0b0-4936-90dd-f7f8042aee3f" />
+  </Folder>
+</Solution>
