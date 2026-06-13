@@ -1,0 +1,47 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET user-specific files
+*.rsuser
+*.userprefs
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+# Test and coverage results
+TestResults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+
+# Logs
+*.log
+
+# Local environment and secrets
+.env
+.env.*
+appsettings.Development.json
+secrets.json
+
+# OS files
+Thumbs.db
+Desktop.ini
