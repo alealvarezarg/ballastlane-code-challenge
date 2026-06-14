@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-13
 
-**Status**: Draft
+**Status**: Completed
 
 **Input**: User description: "Define the specification for the ManagementTask API enhancements. Extend the existing API to support filtering by status and user, combined filters, pagination, sorting, text search, status-only updates, overdue and due-within retrieval, deletion rules, status transition validation, default Pending status on creation, PATCH support, filtered retrieval by user and status, a status summary endpoint, idempotent creation, soft delete through archiving, restricted-field protection for non-editable statuses, and active-only retrieval. Invalid requests must return HTTP 400 with a consistent error response, known exceptions must be handled globally with traceId values, endpoints must return deterministic status codes, controllers must remain thin, only DTOs may be exposed, all request DTOs must use FluentValidation, route and payload identifiers must be consistent, read operations should use in-memory caching with invalidation after modifications, clean architecture boundaries must be preserved, repositories must stay in Infrastructure, and the solution should remain simple and readable."
 
