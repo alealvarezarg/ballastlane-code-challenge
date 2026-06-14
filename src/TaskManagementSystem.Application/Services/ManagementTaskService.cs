@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using TaskManagementSystem.Application.Abstractions;
 using TaskManagementSystem.Application.Models;
 using TaskManagementSystem.Domain.Entities;
@@ -14,6 +15,7 @@ public sealed class ManagementTaskService : IManagementTaskService
     private const string OverdueCacheKey = "management-tasks:overdue";
     private const string DueWithinCacheKey = "management-tasks:due-within";
     private const string CacheGenerationKey = "management-tasks:cache-generation";
+    private readonly ILogger<ManagementTaskService> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly IManagementTaskRepository _repository;
     private readonly IManagementUserRepository _managementUserRepository;
@@ -21,51 +23,54 @@ public sealed class ManagementTaskService : IManagementTaskService
     public ManagementTaskService(
         IManagementTaskRepository repository,
         IMemoryCache memoryCache,
-        IManagementUserRepository managementUserRepository)
+        IManagementUserRepository managementUserRepository,
+        ILogger<ManagementTaskService> logger)
     {
         _repository = repository;
         _memoryCache = memoryCache;
         _managementUserRepository = managementUserRepository;
+        _logger = logger;
     }
 
     public async Task<ManagementTask> CreateAsync(ManagementTask task, string? idempotencyKey = null)
     {
-        if (!string.IsNullOrWhiteSpace(idempotencyKey))
+        var effectiveIdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey)
+            ? Guid.NewGuid().ToString("D")
+            : idempotencyKey;
+
+        var existingRecord = await _repository.GetIdempotencyRecordAsync(effectiveIdempotencyKey);
+        var fingerprint = CreateFingerprint(task);
+
+        if (existingRecord is not null)
         {
-            var existingRecord = await _repository.GetIdempotencyRecordAsync(idempotencyKey);
-            var fingerprint = CreateFingerprint(task);
-
-            if (existingRecord is not null)
+            if (!string.Equals(existingRecord.RequestFingerprint, fingerprint, StringComparison.Ordinal))
             {
-                if (!string.Equals(existingRecord.RequestFingerprint, fingerprint, StringComparison.Ordinal))
-                {
-                    throw new ManagementTaskLifecycleException(
-                        "The supplied idempotency key has already been used for a different create request.");
-                }
-
-                var existingTask = await _repository.GetByIdAsync(existingRecord.TaskId)
-                    ?? throw new KeyNotFoundException($"ManagementTask with id '{existingRecord.TaskId}' was not found.");
-
-                return existingTask;
+                throw new ManagementTaskLifecycleException(
+                    "The supplied idempotency key has already been used for a different create request.");
             }
 
-            await EnsureManagementUserExistsAsync(task.UserId);
-            var idempotentCreatedTask = await _repository.CreateAsync(task);
-            await _repository.SaveIdempotencyRecordAsync(new IdempotencyRecord
-            {
-                Key = idempotencyKey,
-                RequestFingerprint = fingerprint,
-                TaskId = idempotentCreatedTask.Id,
-                CreatedAt = DateTime.UtcNow
-            });
+            var existingTask = await _repository.GetByIdAsync(existingRecord.TaskId)
+                ?? throw new KeyNotFoundException($"ManagementTask with id '{existingRecord.TaskId}' was not found.");
 
-            InvalidateCache(idempotentCreatedTask.Id);
-            return idempotentCreatedTask;
+            return existingTask;
         }
 
         await EnsureManagementUserExistsAsync(task.UserId);
         var createdTask = await _repository.CreateAsync(task);
+        await _repository.SaveIdempotencyRecordAsync(new IdempotencyRecord
+        {
+            Key = effectiveIdempotencyKey,
+            RequestFingerprint = fingerprint,
+            TaskId = createdTask.Id,
+            CreatedAt = DateTime.UtcNow
+        });
+
         InvalidateCache(createdTask.Id);
+        _logger.LogInformation(
+            "Created management task {TaskId} for user {UserId} using idempotency key {IdempotencyKey}.",
+            createdTask.Id,
+            createdTask.UserId,
+            effectiveIdempotencyKey);
         return createdTask;
     }
 
@@ -133,6 +138,7 @@ public sealed class ManagementTaskService : IManagementTaskService
 
         var updatedTask = await _repository.UpdateAsync(existingTask);
         InvalidateCache(updatedTask.Id);
+        _logger.LogInformation("Updated management task {TaskId}.", updatedTask.Id);
         return updatedTask;
     }
 
@@ -149,6 +155,7 @@ public sealed class ManagementTaskService : IManagementTaskService
 
         var updatedTask = await _repository.UpdateAsync(existingTask);
         InvalidateCache(id);
+        _logger.LogInformation("Patched management task {TaskId}.", id);
         return updatedTask;
     }
 
@@ -161,6 +168,7 @@ public sealed class ManagementTaskService : IManagementTaskService
 
         var updatedTask = await _repository.UpdateAsync(existingTask);
         InvalidateCache(id);
+        _logger.LogInformation("Updated management task {TaskId} status to {Status}.", id, status);
         return updatedTask;
     }
 
@@ -172,6 +180,7 @@ public sealed class ManagementTaskService : IManagementTaskService
         existingTask.Archive(DateTime.UtcNow);
         await _repository.UpdateAsync(existingTask);
         InvalidateCache(id);
+        _logger.LogInformation("Archived management task {TaskId}.", id);
     }
 
     private void InvalidateCache(Guid id)

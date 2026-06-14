@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Domain.Exceptions;
 
@@ -7,12 +8,21 @@ namespace TaskManagementSystem.Api.ExceptionHandling;
 
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
+    private readonly ILogger<GlobalExceptionHandler> _logger;
+
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    {
+        _logger = logger;
+    }
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
         var response = BuildErrorResponse(httpContext, exception, out var statusCode);
+
+        LogException(httpContext, exception, statusCode);
 
         httpContext.Response.StatusCode = statusCode;
         httpContext.Response.ContentType = "application/json";
@@ -83,5 +93,21 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 response.Message = "An unexpected error occurred.";
                 return response;
         }
+    }
+
+    private void LogException(HttpContext httpContext, Exception exception, int statusCode)
+    {
+        var traceId = httpContext.TraceIdentifier;
+
+        if (statusCode >= StatusCodes.Status500InternalServerError)
+        {
+            _logger.LogError(exception, "Unhandled exception for trace {TraceId}.", traceId);
+            return;
+        }
+
+        _logger.LogWarning(exception, "Handled exception with status {StatusCode} for trace {TraceId}: {Message}",
+            statusCode,
+            traceId,
+            exception.Message);
     }
 }

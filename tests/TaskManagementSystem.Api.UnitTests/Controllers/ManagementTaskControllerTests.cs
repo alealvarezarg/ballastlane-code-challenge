@@ -1,6 +1,8 @@
 using FakeItEasy;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TaskManagementSystem.Api.Controllers;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Application.Models;
@@ -119,6 +121,94 @@ public sealed class ManagementTaskControllerTests
         A.CallTo(() => _managementTaskService.DeleteAsync(task.Id)).MustHaveHappenedOnceExactly();
     }
 
+    [Fact]
+    public async Task GetOverdueAsync_ShouldReturnOkWithTaskResponseDtos()
+    {
+        var tasks = new[]
+        {
+            CreateTask(),
+            CreateTask()
+        };
+        A.CallTo(() => _managementTaskService.GetOverdueAsync(false, A<DateTime>._)).Returns(tasks);
+
+        var result = await _controller.GetOverdueAsync();
+
+        var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
+        var response = okResult.Value.ShouldBeOfType<ManagementTaskResponseDto[]>();
+        response.Length.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldReturnOkWithSummaryResponseDto()
+    {
+        var summary = new[]
+        {
+            new ManagementTaskStatusSummary
+            {
+                Status = ManagementTaskStatus.Pending,
+                Count = 2
+            }
+        };
+        A.CallTo(() => _managementTaskService.GetSummaryAsync(false)).Returns(summary);
+
+        var result = await _controller.GetSummaryAsync();
+
+        var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
+        var response = okResult.Value.ShouldBeOfType<ManagementTaskSummaryResponseDto>();
+        response.Statuses.Count.ShouldBe(1);
+        response.Statuses.First().ShouldBeOfType<ManagementTaskStatusCountDto>();
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_ShouldReturnOkWithResponseDto()
+    {
+        var task = CreateTask();
+        var request = new UpdateManagementTaskStatusRequestDto
+        {
+            Status = ManagementTaskStatus.Completed
+        };
+        A.CallTo(() => _managementTaskService.UpdateStatusAsync(task.Id, request.Status)).Returns(task);
+
+        var result = await _controller.UpdateStatusAsync(task.Id, request);
+
+        var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
+        okResult.Value.ShouldBeOfType<ManagementTaskResponseDto>();
+    }
+
+    [Fact]
+    public void CreateRequestDto_ShouldDeserializeStringStatus()
+    {
+        const string json = """
+            {
+              "title": "Task title",
+              "description": "Task description",
+              "status": "Completed",
+              "dueDate": "2030-01-01T00:00:00Z",
+              "userId": "11111111-1111-1111-1111-111111111111"
+            }
+            """;
+
+        var result = JsonSerializer.Deserialize<CreateManagementTaskRequestDto>(json, CreateApiJsonOptions());
+
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe(ManagementTaskStatus.Completed);
+    }
+
+    [Fact]
+    public void UpdateStatusRequestDto_ShouldDeserializeStringStatus()
+    {
+        const string json = """
+            {
+              "status": "InProgress"
+            }
+            """;
+
+        var result = JsonSerializer.Deserialize<UpdateManagementTaskStatusRequestDto>(json, CreateApiJsonOptions());
+
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe(ManagementTaskStatus.InProgress);
+    }
+
     private static ManagementTask CreateTask()
     {
         return new ManagementTask(
@@ -128,5 +218,15 @@ public sealed class ManagementTaskControllerTests
             ManagementTaskStatus.Pending,
             DateTime.UtcNow.AddDays(1),
             Guid.NewGuid());
+    }
+
+    private static JsonSerializerOptions CreateApiJsonOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        options.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
+        return options;
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TaskManagementSystem.Application.Abstractions;
 using TaskManagementSystem.Application.Models;
 using TaskManagementSystem.Domain.Entities;
@@ -8,17 +9,20 @@ namespace TaskManagementSystem.Application.Services;
 public sealed class ManagementUserService : IManagementUserService
 {
     private readonly IAccessTokenService _accessTokenService;
+    private readonly ILogger<ManagementUserService> _logger;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IManagementUserRepository _repository;
 
     public ManagementUserService(
         IManagementUserRepository repository,
         IPasswordHasher passwordHasher,
-        IAccessTokenService accessTokenService)
+        IAccessTokenService accessTokenService,
+        ILogger<ManagementUserService> logger)
     {
         _repository = repository;
         _passwordHasher = passwordHasher;
         _accessTokenService = accessTokenService;
+        _logger = logger;
     }
 
     public async Task<ManagementUser> CreateAsync(string username, string email, string password)
@@ -36,7 +40,9 @@ public sealed class ManagementUserService : IManagementUserService
         var passwordHash = _passwordHasher.HashPassword(password);
         var user = new ManagementUser(Guid.NewGuid(), username, email, passwordHash);
 
-        return await _repository.CreateAsync(user);
+        var createdUser = await _repository.CreateAsync(user);
+        _logger.LogInformation("Created management user {UserId} with email {Email}.", createdUser.Id, createdUser.Email);
+        return createdUser;
     }
 
     public async Task<AuthenticatedManagementUser> LoginAsync(string email, string password)
@@ -48,7 +54,9 @@ public sealed class ManagementUserService : IManagementUserService
             throw new InvalidManagementUserCredentialsException("The supplied credentials are invalid.");
         }
 
-        return _accessTokenService.CreateToken(user);
+        var authenticatedUser = _accessTokenService.CreateToken(user);
+        _logger.LogInformation("Authenticated management user {UserId} with email {Email}.", user.Id, user.Email);
+        return authenticatedUser;
     }
 
     public async Task<ManagementUser?> GetByIdAsync(Guid id)

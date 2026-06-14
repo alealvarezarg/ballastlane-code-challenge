@@ -29,5 +29,8 @@ public sealed class UpdateManagementTaskStatusRequestDtoValidatorTests
         });
 
         result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
+            error.PropertyName == nameof(UpdateManagementTaskStatusRequestDto.Status) &&
+            error.ErrorMessage == "Status must be a valid task status.");
     }
 }

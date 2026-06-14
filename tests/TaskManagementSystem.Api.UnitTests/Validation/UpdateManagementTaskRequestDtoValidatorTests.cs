@@ -41,4 +41,25 @@ public sealed class UpdateManagementTaskRequestDtoValidatorTests
         result.Errors.ShouldContain(error => error.PropertyName == nameof(UpdateManagementTaskRequestDto.DueDate));
         result.Errors.ShouldContain(error => error.PropertyName == nameof(UpdateManagementTaskRequestDto.UserId));
     }
+
+    [Fact]
+    public async Task ValidateAsync_ShouldFail_ForInvalidStatus()
+    {
+        var request = new UpdateManagementTaskRequestDto
+        {
+            Id = Guid.NewGuid(),
+            Title = "Task title",
+            Description = "Task description",
+            Status = (ManagementTaskStatus)999,
+            DueDate = DateTime.UtcNow.AddDays(1),
+            UserId = Guid.NewGuid()
+        };
+
+        var result = await _validator.ValidateAsync(request);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
+            error.PropertyName == nameof(UpdateManagementTaskRequestDto.Status) &&
+            error.ErrorMessage == "Status must be a valid task status.");
+    }
 }

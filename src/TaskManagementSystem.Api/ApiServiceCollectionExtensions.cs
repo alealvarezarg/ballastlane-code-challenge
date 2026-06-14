@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 using System.Text;
 using TaskManagementSystem.Api.ExceptionHandling;
 using TaskManagementSystem.Api.Models;
@@ -27,6 +28,8 @@ public static class ApiServiceCollectionExtensions
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.AllowTrailingCommas = true;
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
             })
             .ConfigureApiBehaviorOptions(options =>
             {

@@ -1,8 +1,14 @@
+using Serilog;
 using TaskManagementSystem.Api;
 using TaskManagementSystem.Application;
 using TaskManagementSystem.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .WriteTo.Console());
 
 builder.Services.AddApplicationDependencies();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);

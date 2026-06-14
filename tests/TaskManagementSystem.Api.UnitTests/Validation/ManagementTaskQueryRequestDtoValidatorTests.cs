@@ -1,6 +1,7 @@
 using Shouldly;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Api.Validation;
+using TaskManagementSystem.Domain.Enums;
 
 namespace TaskManagementSystem.Api.UnitTests.Validation;
 
@@ -34,5 +35,23 @@ public sealed class ManagementTaskQueryRequestDtoValidatorTests
         });
 
         result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateAsync_ShouldFail_ForInvalidStatus()
+    {
+        var result = await _validator.ValidateAsync(new ManagementTaskQueryRequestDto
+        {
+            Status = (ManagementTaskStatus)999,
+            SortBy = "title",
+            SortDirection = "asc",
+            Page = 1,
+            PageSize = 20
+        });
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(error =>
+            error.PropertyName == nameof(ManagementTaskQueryRequestDto.Status) &&
+            error.ErrorMessage == "Status must be a valid task status.");
     }
 }

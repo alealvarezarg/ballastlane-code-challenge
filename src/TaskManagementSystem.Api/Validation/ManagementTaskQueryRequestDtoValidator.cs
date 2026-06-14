@@ -1,5 +1,6 @@
 using FluentValidation;
 using TaskManagementSystem.Api.Models;
+using TaskManagementSystem.Domain.Enums;
 
 namespace TaskManagementSystem.Api.Validation;
 
@@ -10,6 +11,14 @@ public sealed class ManagementTaskQueryRequestDtoValidator : AbstractValidator<M
 
     public ManagementTaskQueryRequestDtoValidator()
     {
+        When(request => request.Status.HasValue, () =>
+        {
+            RuleFor(request => request.Status!.Value)
+                .Must(status => Enum.IsDefined(typeof(ManagementTaskStatus), status))
+                .WithMessage("Status must be a valid task status.")
+                .OverridePropertyName(nameof(ManagementTaskQueryRequestDto.Status));
+        });
+
         RuleFor(request => request.SortBy)
             .Must(value => string.IsNullOrWhiteSpace(value) || AllowedSortFields.Contains(value))
             .WithMessage("SortBy must be one of title, status, or dueDate.");

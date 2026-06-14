@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Shouldly;
+using System.Text.Json.Serialization;
 using TaskManagementSystem.Api;
 using TaskManagementSystem.Api.ExceptionHandling;
 using TaskManagementSystem.Api.Models;
@@ -83,5 +84,21 @@ public sealed class ProgramServiceRegistrationTests
         var provider = services.BuildServiceProvider();
         var jsonOptions = provider.GetRequiredService<IOptions<JsonOptions>>().Value;
         jsonOptions.JsonSerializerOptions.AllowTrailingCommas.ShouldBeTrue();
+        jsonOptions.JsonSerializerOptions.Converters.ShouldContain(converter =>
+            converter is JsonStringEnumConverter);
+    }
+
+    [Fact]
+    public void ProgramConfiguration_ShouldUseSerilogConsoleLogging()
+    {
+        var repositoryRoot = TestPathHelper.GetRepositoryRoot();
+        var programFile = Path.Combine(repositoryRoot, "src", "TaskManagementSystem.Api", "Program.cs");
+
+        File.Exists(programFile).ShouldBeTrue();
+
+        var content = File.ReadAllText(programFile);
+
+        content.ShouldContain("UseSerilog");
+        content.ShouldContain("WriteTo.Console");
     }
 }

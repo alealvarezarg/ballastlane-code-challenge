@@ -1,6 +1,8 @@
+using FakeItEasy;
 using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using TaskManagementSystem.Api.ExceptionHandling;
 using TaskManagementSystem.Api.Models;
@@ -10,7 +12,7 @@ namespace TaskManagementSystem.Api.UnitTests.ExceptionHandling;
 
 public sealed class GlobalExceptionHandlerEnhancementTests
 {
-    private readonly GlobalExceptionHandler _handler = new();
+    private readonly GlobalExceptionHandler _handler = new(A.Fake<ILogger<GlobalExceptionHandler>>());
 
     [Theory]
     [InlineData(typeof(ValidationException), StatusCodes.Status400BadRequest)]

@@ -1,7 +1,9 @@
 using FakeItEasy;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using TaskManagementSystem.Application.Abstractions;
+using TaskManagementSystem.Application.Models;
 using TaskManagementSystem.Application.Services;
 using TaskManagementSystem.Domain.Entities;
 using TaskManagementSystem.Domain.Enums;
@@ -16,10 +18,12 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = CreateMemoryCache();
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var task = CreateTask();
 
+        A.CallTo(() => repository.GetIdempotencyRecordAsync(A<string>._)).Returns(Task.FromResult<IdempotencyRecord?>(null));
         A.CallTo(() => managementUserRepository.ExistsAsync(task.UserId)).Returns(true);
         A.CallTo(() => repository.CreateAsync(task)).Returns(task);
 
@@ -27,6 +31,31 @@ public sealed class ManagementTaskServiceTests
 
         result.ShouldBe(task);
         A.CallTo(() => repository.CreateAsync(task)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => repository.SaveIdempotencyRecordAsync(A<IdempotencyRecord>._)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldGenerateGuidIdempotencyKey_WhenKeyIsNotProvided()
+    {
+        var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
+        using var memoryCache = CreateMemoryCache();
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
+        var task = CreateTask();
+        IdempotencyRecord? savedRecord = null;
+
+        A.CallTo(() => repository.GetIdempotencyRecordAsync(A<string>._)).Returns(Task.FromResult<IdempotencyRecord?>(null));
+        A.CallTo(() => managementUserRepository.ExistsAsync(task.UserId)).Returns(true);
+        A.CallTo(() => repository.CreateAsync(task)).Returns(task);
+        A.CallTo(() => repository.SaveIdempotencyRecordAsync(A<IdempotencyRecord>._))
+            .Invokes(call => savedRecord = call.GetArgument<IdempotencyRecord>(0));
+
+        await service.CreateAsync(task);
+
+        var record = savedRecord.ShouldNotBeNull();
+        Guid.TryParse(record.Key, out _).ShouldBeTrue();
+        record.TaskId.ShouldBe(task.Id);
     }
 
     [Fact]
@@ -34,10 +63,11 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         var task = CreateTask();
         using var memoryCache = CreateMemoryCache();
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
 
         var result = await service.GetByIdAsync(task.Id);
 
@@ -50,9 +80,10 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         var task = CreateTask();
         using var memoryCache = CreateMemoryCache();
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
 
         A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(task);
 
@@ -69,10 +100,11 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = CreateMemoryCache();
         var tasks = new[] { CreateTask() };
         memoryCache.Set("management-tasks:all", tasks);
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
 
         var result = await service.GetAllAsync();
 
@@ -85,9 +117,10 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = CreateMemoryCache();
         var tasks = new[] { CreateTask() };
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
 
         A.CallTo(() => repository.GetAllAsync()).Returns(tasks);
 
@@ -104,11 +137,12 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         var task = CreateTask();
         using var memoryCache = CreateMemoryCache();
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
         memoryCache.Set("management-tasks:all", new[] { task });
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var existingTask = new ManagementTask(
             task.Id,
             task.Title,
@@ -133,11 +167,12 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         var task = CreateTask();
         using var memoryCache = CreateMemoryCache();
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
         memoryCache.Set("management-tasks:all", new[] { task });
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(task);
         A.CallTo(() => repository.UpdateAsync(A<ManagementTask>._))
             .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementTask>(0)!));
@@ -154,12 +189,14 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         var task = CreateTask();
         using var memoryCache = CreateMemoryCache();
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
         memoryCache.Set("management-tasks:all", new[] { task });
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
 
+        A.CallTo(() => repository.GetIdempotencyRecordAsync(A<string>._)).Returns(Task.FromResult<IdempotencyRecord?>(null));
         A.CallTo(() => managementUserRepository.ExistsAsync(task.UserId)).Returns(true);
         A.CallTo(() => repository.CreateAsync(task)).Returns(task);
 
@@ -174,15 +211,40 @@ public sealed class ManagementTaskServiceTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = CreateMemoryCache();
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var task = CreateTask();
+        A.CallTo(() => repository.GetIdempotencyRecordAsync(A<string>._)).Returns(Task.FromResult<IdempotencyRecord?>(null));
         A.CallTo(() => managementUserRepository.ExistsAsync(task.UserId)).Returns(false);
 
         var exception = await Should.ThrowAsync<ManagementUserNotFoundException>(() => service.CreateAsync(task));
 
         exception.Message.ShouldContain(task.UserId.ToString());
         A.CallTo(() => repository.CreateAsync(A<ManagementTask>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldWriteInformationLog_WhenTaskIsCreated()
+    {
+        var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
+        using var memoryCache = CreateMemoryCache();
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
+        var task = CreateTask();
+
+        A.CallTo(() => repository.GetIdempotencyRecordAsync(A<string>._)).Returns(Task.FromResult<IdempotencyRecord?>(null));
+        A.CallTo(() => managementUserRepository.ExistsAsync(task.UserId)).Returns(true);
+        A.CallTo(() => repository.CreateAsync(task)).Returns(task);
+
+        await service.CreateAsync(task);
+
+        A.CallTo(logger).Where(call =>
+            call.Method.Name == nameof(ILogger.Log) &&
+            call.GetArgument<LogLevel>(0) == LogLevel.Information &&
+            call.GetArgument<object>(2).ToString()!.Contains(task.Id.ToString(), StringComparison.Ordinal))
+            .MustHaveHappened();
     }
 
     private static MemoryCache CreateMemoryCache()

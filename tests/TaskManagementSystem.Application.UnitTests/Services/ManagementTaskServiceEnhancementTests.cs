@@ -1,5 +1,6 @@
 using FakeItEasy;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using TaskManagementSystem.Application.Abstractions;
 using TaskManagementSystem.Application.Models;
@@ -16,8 +17,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var options = new ManagementTaskQueryOptions
         {
             Status = ManagementTaskStatus.Pending,
@@ -47,8 +49,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var task = CreateTask();
         var key = "idem-1";
 
@@ -72,8 +75,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         var task = CreateTask();
 
         A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(task);
@@ -92,8 +96,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     {
         var repository = A.Fake<IManagementTaskRepository>();
         var managementUserRepository = A.Fake<IManagementUserRepository>();
+        var logger = A.Fake<ILogger<ManagementTaskService>>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository, logger);
         IReadOnlyCollection<ManagementTaskStatusSummary> summary =
         [
             new ManagementTaskStatusSummary

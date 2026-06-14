@@ -67,6 +67,7 @@ public sealed class ManagementUserControllerTests
         var response = okResult.Value.ShouldBeOfType<ManagementUserLoginResponseDto>();
         response.AccessToken.ShouldBe("access-token");
         response.User.Email.ShouldBe(request.Email);
+        response.User.ShouldBeOfType<ManagementUserResponseDto>();
     }
 
     [Fact]
@@ -81,6 +82,18 @@ public sealed class ManagementUserControllerTests
         var response = okResult.Value.ShouldBeOfType<ManagementUserResponseDto>();
         response.Id.ShouldBe(user.Id);
         response.Username.ShouldBe(user.Username);
+    }
+
+    [Fact]
+    public void ManagementUserResponseDto_ShouldNotExposePasswordFields()
+    {
+        var propertyNames = typeof(ManagementUserResponseDto)
+            .GetProperties()
+            .Select(property => property.Name)
+            .ToArray();
+
+        propertyNames.ShouldNotContain("Password");
+        propertyNames.ShouldNotContain("PasswordHash");
     }
 
     [Fact]

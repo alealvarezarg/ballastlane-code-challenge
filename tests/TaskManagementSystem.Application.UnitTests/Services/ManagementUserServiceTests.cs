@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using TaskManagementSystem.Application.Abstractions;
 using TaskManagementSystem.Application.Models;
@@ -13,6 +14,7 @@ public sealed class ManagementUserServiceTests
     private readonly IAccessTokenService _accessTokenService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IManagementUserRepository _repository;
+    private readonly ILogger<ManagementUserService> _logger;
     private readonly ManagementUserService _service;
 
     public ManagementUserServiceTests()
@@ -20,7 +22,8 @@ public sealed class ManagementUserServiceTests
         _repository = A.Fake<IManagementUserRepository>();
         _passwordHasher = A.Fake<IPasswordHasher>();
         _accessTokenService = A.Fake<IAccessTokenService>();
-        _service = new ManagementUserService(_repository, _passwordHasher, _accessTokenService);
+        _logger = A.Fake<ILogger<ManagementUserService>>();
+        _service = new ManagementUserService(_repository, _passwordHasher, _accessTokenService, _logger);
     }
 
     [Fact]
@@ -117,5 +120,23 @@ public sealed class ManagementUserServiceTests
         var result = await _service.ExistsAsync(id);
 
         result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldWriteInformationLog_WhenUserIsCreated()
+    {
+        A.CallTo(() => _repository.GetByUsernameAsync("manager")).Returns(Task.FromResult<ManagementUser?>(null));
+        A.CallTo(() => _repository.GetByEmailAsync("manager@example.com")).Returns(Task.FromResult<ManagementUser?>(null));
+        A.CallTo(() => _passwordHasher.HashPassword("Password123!")).Returns("hashed-password");
+        A.CallTo(() => _repository.CreateAsync(A<ManagementUser>._))
+            .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementUser>(0)!));
+
+        await _service.CreateAsync("manager", "manager@example.com", "Password123!");
+
+        A.CallTo(_logger).Where(call =>
+            call.Method.Name == nameof(ILogger.Log) &&
+            call.GetArgument<LogLevel>(0) == LogLevel.Information &&
+            call.GetArgument<object>(2).ToString()!.Contains("manager@example.com", StringComparison.Ordinal))
+            .MustHaveHappened();
     }
 }
