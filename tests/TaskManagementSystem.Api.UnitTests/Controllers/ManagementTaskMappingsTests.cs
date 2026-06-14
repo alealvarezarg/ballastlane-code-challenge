@@ -1,5 +1,6 @@
 using Shouldly;
 using TaskManagementSystem.Api.Models;
+using TaskManagementSystem.Application.Models;
 using TaskManagementSystem.Domain.Entities;
 using TaskManagementSystem.Domain.Enums;
 
@@ -88,5 +89,36 @@ public sealed class ManagementTaskMappingsTests
         result.DueDate.ShouldBe(task.DueDate);
         result.UserId.ShouldBe(task.UserId);
         result.IsArchived.ShouldBe(task.IsArchived);
+    }
+
+    [Fact]
+    public void DomainUser_ShouldMapToResponseDto()
+    {
+        var user = new ManagementUser(Guid.NewGuid(), "manager", "manager@example.com", "hashed-password");
+
+        var result = user.ToResponseDto();
+
+        result.Id.ShouldBe(user.Id);
+        result.Username.ShouldBe(user.Username);
+        result.Email.ShouldBe(user.Email);
+    }
+
+    [Fact]
+    public void AuthenticatedUser_ShouldMapToLoginResponseDto()
+    {
+        var authenticatedUser = new AuthenticatedManagementUser
+        {
+            Id = Guid.NewGuid(),
+            Username = "manager",
+            Email = "manager@example.com",
+            AccessToken = "access-token",
+            ExpiresAt = DateTime.UtcNow.AddMinutes(30)
+        };
+
+        var result = authenticatedUser.ToResponseDto();
+
+        result.AccessToken.ShouldBe(authenticatedUser.AccessToken);
+        result.User.Username.ShouldBe(authenticatedUser.Username);
+        result.User.Email.ShouldBe(authenticatedUser.Email);
     }
 }

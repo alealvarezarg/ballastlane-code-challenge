@@ -9,7 +9,7 @@ public sealed class OpenApiContractTests
     {
         var repositoryRoot = TestPathHelper.GetRepositoryRoot();
         var canonicalContract = Path.Combine(repositoryRoot, "openapi", "openapi.yaml");
-        var mirroredContract = Path.Combine(repositoryRoot, "specs", "006-management-task-api-enhancements", "contracts", "management-tasks.openapi.yaml");
+        var mirroredContract = Path.Combine(repositoryRoot, "specs", "007-management-user-auth", "contracts", "management-users-auth.openapi.yaml");
 
         File.Exists(canonicalContract).ShouldBeTrue();
         File.Exists(mirroredContract).ShouldBeTrue();
@@ -18,10 +18,10 @@ public sealed class OpenApiContractTests
         var mirroredContent = NormalizeLineEndings(File.ReadAllText(mirroredContract));
 
         canonicalContent.ShouldBe(mirroredContent);
+        canonicalContent.ShouldContain("/management-users");
+        canonicalContent.ShouldContain("/management-users/login");
         canonicalContent.ShouldContain("/management-tasks");
-        canonicalContent.ShouldContain("/management-tasks/summary");
-        canonicalContent.ShouldContain("/management-tasks/{id}/status");
-        canonicalContent.ShouldContain("PagedManagementTaskResponseDto");
+        canonicalContent.ShouldContain("BearerAuth");
     }
 
     private static string NormalizeLineEndings(string content)

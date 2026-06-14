@@ -1,17 +1,27 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 using TaskManagementSystem.Api.ExceptionHandling;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Api.Validation;
+using TaskManagementSystem.Infrastructure.Authentication;
 
 namespace TaskManagementSystem.Api;
 
 public static class ApiServiceCollectionExtensions
 {
     public static IServiceCollection AddTaskManagementApi(
-        this IServiceCollection services)
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
+        var authenticationSettings = configuration
+            .GetSection(JwtAuthenticationSettings.SectionName)
+            .Get<JwtAuthenticationSettings>() ?? new JwtAuthenticationSettings();
+
         services
             .AddControllers()
             .AddJsonOptions(options =>
@@ -55,7 +65,48 @@ public static class ApiServiceCollectionExtensions
         services.AddValidatorsFromAssemblyContaining<CreateManagementTaskRequestDtoValidator>();
         services.AddFluentValidationAutoValidation();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = authenticationSettings.Issuer,
+                    ValidAudience = authenticationSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.SigningKey)),
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+        services.AddAuthorization();
+        services.AddSwaggerGen(options =>
+        {
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Supply a bearer token to call protected endpoints."
+            });
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
 
         return services;
     }

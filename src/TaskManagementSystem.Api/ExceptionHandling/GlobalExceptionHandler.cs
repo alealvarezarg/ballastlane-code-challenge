@@ -65,6 +65,18 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 response.Message = conflictException.Message;
                 return response;
 
+            case DuplicateManagementUserException duplicateManagementUserException:
+                statusCode = StatusCodes.Status409Conflict;
+                response.StatusCode = statusCode;
+                response.Message = duplicateManagementUserException.Message;
+                return response;
+
+            case InvalidManagementUserCredentialsException invalidCredentialsException:
+                statusCode = StatusCodes.Status401Unauthorized;
+                response.StatusCode = statusCode;
+                response.Message = invalidCredentialsException.Message;
+                return response;
+
             default:
                 statusCode = StatusCodes.Status500InternalServerError;
                 response.StatusCode = statusCode;

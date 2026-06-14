@@ -16,11 +16,16 @@ public sealed class ManagementTaskService : IManagementTaskService
     private const string CacheGenerationKey = "management-tasks:cache-generation";
     private readonly IMemoryCache _memoryCache;
     private readonly IManagementTaskRepository _repository;
+    private readonly IManagementUserRepository _managementUserRepository;
 
-    public ManagementTaskService(IManagementTaskRepository repository, IMemoryCache memoryCache)
+    public ManagementTaskService(
+        IManagementTaskRepository repository,
+        IMemoryCache memoryCache,
+        IManagementUserRepository managementUserRepository)
     {
         _repository = repository;
         _memoryCache = memoryCache;
+        _managementUserRepository = managementUserRepository;
     }
 
     public async Task<ManagementTask> CreateAsync(ManagementTask task, string? idempotencyKey = null)
@@ -44,6 +49,7 @@ public sealed class ManagementTaskService : IManagementTaskService
                 return existingTask;
             }
 
+            await EnsureManagementUserExistsAsync(task.UserId);
             var idempotentCreatedTask = await _repository.CreateAsync(task);
             await _repository.SaveIdempotencyRecordAsync(new IdempotencyRecord
             {
@@ -57,6 +63,7 @@ public sealed class ManagementTaskService : IManagementTaskService
             return idempotentCreatedTask;
         }
 
+        await EnsureManagementUserExistsAsync(task.UserId);
         var createdTask = await _repository.CreateAsync(task);
         InvalidateCache(createdTask.Id);
         return createdTask;
@@ -207,5 +214,15 @@ public sealed class ManagementTaskService : IManagementTaskService
         cacheGeneration = Guid.NewGuid().ToString("N");
         _memoryCache.Set(CacheGenerationKey, cacheGeneration);
         return cacheGeneration;
+    }
+
+    private async Task EnsureManagementUserExistsAsync(Guid userId)
+    {
+        if (await _managementUserRepository.ExistsAsync(userId))
+        {
+            return;
+        }
+
+        throw new ManagementUserNotFoundException($"ManagementUser with id '{userId}' does not exist.");
     }
 }

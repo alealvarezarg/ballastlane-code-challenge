@@ -15,8 +15,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     public async Task QueryAsync_ShouldCacheRepositoryResult_ForSameQuery()
     {
         var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
         var options = new ManagementTaskQueryOptions
         {
             Status = ManagementTaskStatus.Pending,
@@ -45,8 +46,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     public async Task CreateAsync_ShouldReturnExistingTask_WhenMatchingIdempotencyKeyExists()
     {
         var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
         var task = CreateTask();
         var key = "idem-1";
 
@@ -69,14 +71,15 @@ public sealed class ManagementTaskServiceEnhancementTests
     public async Task DeleteAsync_ShouldArchiveExistingTask_UsingRepositoryUpdate()
     {
         var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
         var task = CreateTask();
 
         A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(task);
         A.CallTo(() => repository.UpdateAsync(A<ManagementTask>._))
-            .Invokes(call => call.GetArgument<ManagementTask>(0).IsArchived.ShouldBeTrue())
-            .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementTask>(0)));
+            .Invokes(call => call.GetArgument<ManagementTask>(0)!.IsArchived.ShouldBeTrue())
+            .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementTask>(0)!));
 
         await service.DeleteAsync(task.Id);
 
@@ -88,8 +91,9 @@ public sealed class ManagementTaskServiceEnhancementTests
     public async Task GetSummaryAsync_ShouldCacheRepositoryResult_ForSameScope()
     {
         var repository = A.Fake<IManagementTaskRepository>();
+        var managementUserRepository = A.Fake<IManagementUserRepository>();
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var service = new ManagementTaskService(repository, memoryCache);
+        var service = new ManagementTaskService(repository, memoryCache, managementUserRepository);
         IReadOnlyCollection<ManagementTaskStatusSummary> summary =
         [
             new ManagementTaskStatusSummary

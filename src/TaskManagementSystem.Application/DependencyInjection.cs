@@ -10,6 +10,7 @@ public static class DependencyInjection
     {
         services.AddMemoryCache();
         services.AddScoped<IManagementTaskService, ManagementTaskService>();
+        services.AddScoped<IManagementUserService, ManagementUserService>();
 
         return services;
     }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using TaskManagementSystem.Api.ExceptionHandling;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Application;
 using TaskManagementSystem.Application.Abstractions;
+using TaskManagementSystem.Infrastructure.Authentication;
 using TaskManagementSystem.Infrastructure;
 using TaskManagementSystem.Infrastructure.Database;
 
@@ -25,16 +27,25 @@ public sealed class ProgramServiceRegistrationTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"{LiteDbSettings.SectionName}:ConnectionString"] = "Filename=test-api.db;Connection=shared",
-                [$"{LiteDbSettings.SectionName}:TasksCollectionName"] = "management_tasks"
+                [$"{LiteDbSettings.SectionName}:TasksCollectionName"] = "management_tasks",
+                [$"{LiteDbSettings.SectionName}:UsersCollectionName"] = "management_users",
+                [$"{JwtAuthenticationSettings.SectionName}:Issuer"] = "TaskManagementSystem",
+                [$"{JwtAuthenticationSettings.SectionName}:Audience"] = "TaskManagementSystem.Api",
+                [$"{JwtAuthenticationSettings.SectionName}:SigningKey"] = "TaskManagementSystemDevelopmentSigningKey123!",
+                [$"{JwtAuthenticationSettings.SectionName}:AccessTokenLifetimeMinutes"] = "60"
             })
             .Build();
 
         services.AddApplicationDependencies();
         services.AddInfrastructureDependencies(configuration);
-        services.AddTaskManagementApi();
+        services.AddTaskManagementApi(configuration);
 
         services.ShouldContain(descriptor =>
             descriptor.ServiceType == typeof(IManagementTaskService) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IManagementUserService) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
 
         services.ShouldContain(descriptor =>
@@ -57,8 +68,17 @@ public sealed class ProgramServiceRegistrationTests
             descriptor.ServiceType == typeof(IValidator<UpdateManagementTaskStatusRequestDto>));
 
         services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<CreateManagementUserRequestDto>));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<LoginManagementUserRequestDto>));
+
+        services.ShouldContain(descriptor =>
             descriptor.ServiceType == typeof(IExceptionHandler) &&
             descriptor.ImplementationType == typeof(GlobalExceptionHandler));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IAuthenticationSchemeProvider));
 
         var provider = services.BuildServiceProvider();
         var jsonOptions = provider.GetRequiredService<IOptions<JsonOptions>>().Value;

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using TaskManagementSystem.Application.Abstractions;
+using TaskManagementSystem.Infrastructure.Authentication;
 using TaskManagementSystem.Infrastructure.Database;
 using TaskManagementSystem.Infrastructure.Repositories;
 
@@ -14,10 +15,14 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.Configure<LiteDbSettings>(configuration.GetSection(LiteDbSettings.SectionName));
+        services.Configure<JwtAuthenticationSettings>(configuration.GetSection(JwtAuthenticationSettings.SectionName));
         services.AddScoped(serviceProvider =>
             serviceProvider.GetRequiredService<IOptionsSnapshot<LiteDbSettings>>().Value);
         services.AddScoped<LiteDbContext>();
         services.AddScoped<IManagementTaskRepository, ManagementTaskRepository>();
+        services.AddScoped<IManagementUserRepository, ManagementUserRepository>();
+        services.AddScoped<IPasswordHasher, AspNetPasswordHasher>();
+        services.AddScoped<IAccessTokenService, JwtAccessTokenService>();
 
         return services;
     }

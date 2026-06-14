@@ -75,6 +75,34 @@ public sealed class GlobalExceptionHandlerTests
     }
 
     [Fact]
+    public async Task TryHandleAsync_ShouldReturnConflict_ForDuplicateManagementUserException()
+    {
+        var context = CreateHttpContext();
+        var exception = new DuplicateManagementUserException("A user already exists.");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+        var response = await ReadResponseAsync(context);
+
+        handled.ShouldBeTrue();
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status409Conflict);
+        response.Message.ShouldBe("A user already exists.");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_ShouldReturnUnauthorized_ForInvalidManagementUserCredentialsException()
+    {
+        var context = CreateHttpContext();
+        var exception = new InvalidManagementUserCredentialsException("The supplied credentials are invalid.");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+        var response = await ReadResponseAsync(context);
+
+        handled.ShouldBeTrue();
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
+        response.Message.ShouldBe("The supplied credentials are invalid.");
+    }
+
+    [Fact]
     public async Task TryHandleAsync_ShouldReturnInternalServerError_ForUnexpectedException()
     {
         var context = CreateHttpContext();

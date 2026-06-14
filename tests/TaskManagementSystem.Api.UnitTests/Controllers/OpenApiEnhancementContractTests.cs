@@ -16,5 +16,7 @@ public sealed class OpenApiEnhancementContractTests
         content.ShouldContain("/management-tasks/due-within");
         content.ShouldContain("/management-tasks/{id}/status");
         content.ShouldContain("PatchManagementTaskRequestDto");
+        content.ShouldContain("/management-users/login");
+        content.ShouldContain("BearerAuth");
     }
 }

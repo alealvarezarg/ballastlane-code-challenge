@@ -14,7 +14,7 @@ public sealed class LiteDbContextTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_ShouldExposeTasksCollection_AndCreateDatabaseFile()
+    public void Constructor_ShouldExposeTasksAndUsersCollections_AndCreateDatabaseFile()
     {
         var settings = new LiteDbSettings
         {
@@ -24,6 +24,7 @@ public sealed class LiteDbContextTests : IDisposable
         using var context = new LiteDbContext(Options.Create(settings));
 
         context.Tasks.ShouldNotBeNull();
+        context.Users.ShouldNotBeNull();
         File.Exists(_databasePath).ShouldBeTrue();
         context.Settings.ConnectionString.ShouldBe(settings.ConnectionString);
     }

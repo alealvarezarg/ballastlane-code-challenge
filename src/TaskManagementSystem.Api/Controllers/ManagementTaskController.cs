@@ -1,11 +1,13 @@
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagementSystem.Api.Models;
 using TaskManagementSystem.Application.Abstractions;
 
 namespace TaskManagementSystem.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("management-tasks")]
 public sealed class ManagementTaskController : ControllerBase
