@@ -42,6 +42,7 @@ public sealed class GlobalExceptionHandlerTests
         handled.ShouldBeTrue();
         context.Response.StatusCode.ShouldBe(StatusCodes.Status404NotFound);
         response.Message.ShouldBe("Task not found.");
+        response.TraceId.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -56,6 +57,21 @@ public sealed class GlobalExceptionHandlerTests
         handled.ShouldBeTrue();
         context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
         response.Message.ShouldBe("Title cannot be empty.");
+    }
+
+    [Fact]
+    public async Task TryHandleAsync_ShouldReturnConflict_ForManagementTaskLifecycleException()
+    {
+        var context = CreateHttpContext();
+        var exception = new ManagementTaskLifecycleException("Transition is not allowed.");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+        var response = await ReadResponseAsync(context);
+
+        handled.ShouldBeTrue();
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status409Conflict);
+        response.Message.ShouldBe("Transition is not allowed.");
+        response.TraceId.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]

@@ -59,6 +59,12 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 response.Message = keyNotFoundException.Message;
                 return response;
 
+            case ManagementTaskLifecycleException conflictException:
+                statusCode = StatusCodes.Status409Conflict;
+                response.StatusCode = statusCode;
+                response.Message = conflictException.Message;
+                return response;
+
             default:
                 statusCode = StatusCodes.Status500InternalServerError;
                 response.StatusCode = statusCode;

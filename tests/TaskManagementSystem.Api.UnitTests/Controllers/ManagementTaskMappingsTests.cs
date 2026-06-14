@@ -24,9 +24,25 @@ public sealed class ManagementTaskMappingsTests
         result.Id.ShouldNotBe(Guid.Empty);
         result.Title.ShouldBe(request.Title);
         result.Description.ShouldBe(request.Description);
-        result.Status.ShouldBe(request.Status);
+        result.Status.ShouldBe(request.Status!.Value);
         result.DueDate.ShouldBe(request.DueDate);
         result.UserId.ShouldBe(request.UserId);
+    }
+
+    [Fact]
+    public void CreateRequest_ShouldDefaultStatusToPending_WhenStatusIsOmitted()
+    {
+        var request = new CreateManagementTaskRequestDto
+        {
+            Title = "Task title",
+            Description = "Task description",
+            DueDate = DateTime.UtcNow.AddDays(1),
+            UserId = Guid.NewGuid()
+        };
+
+        var result = request.ToDomain();
+
+        result.Status.ShouldBe(ManagementTaskStatus.Pending);
     }
 
     [Fact]
@@ -71,5 +87,6 @@ public sealed class ManagementTaskMappingsTests
         result.Status.ShouldBe(task.Status);
         result.DueDate.ShouldBe(task.DueDate);
         result.UserId.ShouldBe(task.UserId);
+        result.IsArchived.ShouldBe(task.IsArchived);
     }
 }

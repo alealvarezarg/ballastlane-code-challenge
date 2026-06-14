@@ -17,6 +17,10 @@ public sealed class ManagementTaskDocument
 
     public Guid UserId { get; set; }
 
+    public bool IsArchived { get; set; }
+
+    public DateTime? ArchivedAt { get; set; }
+
     public static ManagementTaskDocument FromDomain(ManagementTask task)
     {
         return new ManagementTaskDocument
@@ -26,12 +30,14 @@ public sealed class ManagementTaskDocument
             Description = task.Description,
             Status = task.Status,
             DueDate = task.DueDate,
-            UserId = task.UserId
+            UserId = task.UserId,
+            IsArchived = task.IsArchived,
+            ArchivedAt = task.ArchivedAt
         };
     }
 
     public ManagementTask ToDomain()
     {
-        return new ManagementTask(Id, Title, Description, Status, DueDate, UserId);
+        return new ManagementTask(Id, Title, Description, Status, DueDate, UserId, IsArchived, ArchivedAt);
     }
 }

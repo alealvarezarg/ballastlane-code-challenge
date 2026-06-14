@@ -41,7 +41,13 @@ public static class ApiServiceCollectionExtensions
             });
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+            {
+                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            };
+        });
         services.AddValidatorsFromAssemblyContaining<CreateManagementTaskRequestDtoValidator>();
         services.AddFluentValidationAutoValidation();
         services.AddEndpointsApiExplorer();

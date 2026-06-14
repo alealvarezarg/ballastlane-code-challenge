@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using TaskManagementSystem.Api.Controllers;
 using TaskManagementSystem.Api.Models;
+using TaskManagementSystem.Application.Models;
 using TaskManagementSystem.Application.Abstractions;
 using TaskManagementSystem.Domain.Entities;
 using TaskManagementSystem.Domain.Enums;
@@ -21,20 +22,27 @@ public sealed class ManagementTaskControllerTests
     }
 
     [Fact]
-    public async Task GetAllAsync_ShouldReturnOkWithResponseDtos()
+    public async Task GetAllAsync_ShouldReturnOkWithPagedResponseDto()
     {
-        var tasks = new[]
+        var tasks = new PagedResult<ManagementTask>
         {
-            CreateTask(),
-            CreateTask()
+            Items = new[]
+            {
+                CreateTask(),
+                CreateTask()
+            },
+            Page = 1,
+            PageSize = 50,
+            TotalCount = 2
         };
-        A.CallTo(() => _managementTaskService.GetAllAsync()).Returns(tasks);
+        A.CallTo(() => _managementTaskService.QueryAsync(A<ManagementTaskQueryOptions>._)).Returns(tasks);
 
-        var result = await _controller.GetAllAsync();
+        var result = await _controller.GetAllAsync(new ManagementTaskQueryRequestDto());
 
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
-        var response = okResult.Value.ShouldBeAssignableTo<IReadOnlyCollection<ManagementTaskResponseDto>>();
-        response!.Count.ShouldBe(2);
+        var response = okResult.Value.ShouldBeOfType<PagedManagementTaskResponseDto>();
+        response.Items.Count.ShouldBe(2);
+        response.TotalCount.ShouldBe(2);
     }
 
     [Fact]
@@ -63,11 +71,11 @@ public sealed class ManagementTaskControllerTests
         };
         ManagementTask? createdTask = null;
 
-        A.CallTo(() => _managementTaskService.CreateAsync(A<ManagementTask>._))
+        A.CallTo(() => _managementTaskService.CreateAsync(A<ManagementTask>._, A<string?>._))
             .Invokes(call => createdTask = call.GetArgument<ManagementTask>(0))
             .ReturnsLazily(() => createdTask!);
 
-        var result = await _controller.CreateAsync(request);
+        var result = await _controller.CreateAsync(request, null);
 
         var createdResult = result.Result.ShouldBeOfType<CreatedAtActionResult>();
         createdResult.ActionName.ShouldBe(nameof(ManagementTaskController.GetByIdAsync));

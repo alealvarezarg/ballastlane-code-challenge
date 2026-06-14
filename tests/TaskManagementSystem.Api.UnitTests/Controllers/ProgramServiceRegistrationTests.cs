@@ -46,6 +46,15 @@ public sealed class ProgramServiceRegistrationTests
             descriptor.ServiceType == typeof(IValidator<UpdateManagementTaskRequestDto>));
 
         services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<ManagementTaskQueryRequestDto>));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<PatchManagementTaskRequestDto>));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<UpdateManagementTaskStatusRequestDto>));
+
+        services.ShouldContain(descriptor =>
             descriptor.ServiceType == typeof(IExceptionHandler) &&
             descriptor.ImplementationType == typeof(GlobalExceptionHandler));
     }

@@ -101,12 +101,21 @@ public sealed class ManagementTaskServiceTests
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
         memoryCache.Set("management-tasks:all", new[] { task });
         var service = new ManagementTaskService(repository, memoryCache);
+        var existingTask = new ManagementTask(
+            task.Id,
+            task.Title,
+            task.Description,
+            task.Status,
+            task.DueDate,
+            task.UserId);
 
-        A.CallTo(() => repository.UpdateAsync(task)).Returns(task);
+        A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(existingTask);
+        A.CallTo(() => repository.UpdateAsync(A<ManagementTask>._))
+            .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementTask>(0)!));
 
         var result = await service.UpdateAsync(task);
 
-        result.ShouldBe(task);
+        result.Id.ShouldBe(task.Id);
         memoryCache.TryGetValue(GetTaskCacheKey(task.Id), out _).ShouldBeFalse();
         memoryCache.TryGetValue("management-tasks:all", out _).ShouldBeFalse();
     }
@@ -120,10 +129,13 @@ public sealed class ManagementTaskServiceTests
         memoryCache.Set(GetTaskCacheKey(task.Id), task);
         memoryCache.Set("management-tasks:all", new[] { task });
         var service = new ManagementTaskService(repository, memoryCache);
+        A.CallTo(() => repository.GetByIdAsync(task.Id)).Returns(task);
+        A.CallTo(() => repository.UpdateAsync(A<ManagementTask>._))
+            .ReturnsLazily(call => Task.FromResult(call.GetArgument<ManagementTask>(0)!));
 
         await service.DeleteAsync(task.Id);
 
-        A.CallTo(() => repository.DeleteAsync(task.Id)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => repository.UpdateAsync(A<ManagementTask>._)).MustHaveHappenedOnceExactly();
         memoryCache.TryGetValue(GetTaskCacheKey(task.Id), out _).ShouldBeFalse();
         memoryCache.TryGetValue("management-tasks:all", out _).ShouldBeFalse();
     }

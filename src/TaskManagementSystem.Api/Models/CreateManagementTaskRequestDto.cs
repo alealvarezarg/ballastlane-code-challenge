@@ -8,7 +8,7 @@ public sealed class CreateManagementTaskRequestDto
 
     public string Description { get; set; } = string.Empty;
 
-    public ManagementTaskStatus Status { get; set; }
+    public ManagementTaskStatus? Status { get; set; }
 
     public DateTime DueDate { get; set; }
 

@@ -9,13 +9,16 @@ public sealed class UpdateManagementTaskRequestDtoValidator : AbstractValidator<
     public UpdateManagementTaskRequestDtoValidator()
     {
         RuleFor(request => request.Id)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage("Id must be a valid identifier.");
 
         RuleFor(request => request.Title)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage("Title is required.");
 
         RuleFor(request => request.Description)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage("Description is required.");
 
         RuleFor(request => request.Status)
             .Must(status => Enum.IsDefined(typeof(ManagementTaskStatus), status))
@@ -26,6 +29,7 @@ public sealed class UpdateManagementTaskRequestDtoValidator : AbstractValidator<
             .WithMessage("DueDate must be a valid date.");
 
         RuleFor(request => request.UserId)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage("UserId must be a valid identifier.");
     }
 }

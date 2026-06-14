@@ -15,4 +15,8 @@ public sealed class ManagementTaskResponseDto
     public DateTime DueDate { get; set; }
 
     public Guid UserId { get; set; }
+
+    public bool IsArchived { get; set; }
+
+    public DateTime? ArchivedAt { get; set; }
 }

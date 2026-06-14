@@ -14,9 +14,12 @@ public sealed class CreateManagementTaskRequestDtoValidator : AbstractValidator<
         RuleFor(request => request.Description)
             .NotEmpty();
 
-        RuleFor(request => request.Status)
-            .Must(status => Enum.IsDefined(typeof(ManagementTaskStatus), status))
-            .WithMessage("Status must be a valid task status.");
+        When(request => request.Status.HasValue, () =>
+        {
+            RuleFor(request => request.Status!.Value)
+                .Must(status => Enum.IsDefined(typeof(ManagementTaskStatus), status))
+                .WithMessage("Status must be a valid task status.");
+        });
 
         RuleFor(request => request.DueDate)
             .NotEqual(default(DateTime))
