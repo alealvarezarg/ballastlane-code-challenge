@@ -14,6 +14,10 @@ public static class ApiServiceCollectionExtensions
     {
         services
             .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.AllowTrailingCommas = true;
+            })
             .ConfigureApiBehaviorOptions(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>

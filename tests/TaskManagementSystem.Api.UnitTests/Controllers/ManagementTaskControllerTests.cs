@@ -59,7 +59,7 @@ public sealed class ManagementTaskControllerTests
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldReturnCreatedAtAction()
+    public async Task CreateAsync_ShouldReturnCreatedAtRoute()
     {
         var request = new CreateManagementTaskRequestDto
         {
@@ -77,8 +77,8 @@ public sealed class ManagementTaskControllerTests
 
         var result = await _controller.CreateAsync(request, null);
 
-        var createdResult = result.Result.ShouldBeOfType<CreatedAtActionResult>();
-        createdResult.ActionName.ShouldBe(nameof(ManagementTaskController.GetByIdAsync));
+        var createdResult = result.Result.ShouldBeOfType<CreatedAtRouteResult>();
+        createdResult.RouteName.ShouldBe("GetManagementTaskById");
         var response = createdResult.Value.ShouldBeOfType<ManagementTaskResponseDto>();
         response.Title.ShouldBe(request.Title);
         createdTask.ShouldNotBeNull();

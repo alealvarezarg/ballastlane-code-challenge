@@ -1,7 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Shouldly;
 using TaskManagementSystem.Api;
 using TaskManagementSystem.Api.ExceptionHandling;
@@ -57,5 +59,9 @@ public sealed class ProgramServiceRegistrationTests
         services.ShouldContain(descriptor =>
             descriptor.ServiceType == typeof(IExceptionHandler) &&
             descriptor.ImplementationType == typeof(GlobalExceptionHandler));
+
+        var provider = services.BuildServiceProvider();
+        var jsonOptions = provider.GetRequiredService<IOptions<JsonOptions>>().Value;
+        jsonOptions.JsonSerializerOptions.AllowTrailingCommas.ShouldBeTrue();
     }
 }

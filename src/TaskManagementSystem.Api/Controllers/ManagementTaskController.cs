@@ -27,7 +27,7 @@ public sealed class ManagementTaskController : ControllerBase
         return Ok(tasks.ToResponseDto());
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = "GetManagementTaskById")]
     [ProducesResponseType(typeof(ManagementTaskResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ManagementTaskResponseDto>> GetByIdAsync(Guid id)
@@ -49,7 +49,7 @@ public sealed class ManagementTaskController : ControllerBase
         var createdTask = await _managementTaskService.CreateAsync(request.ToDomain(), idempotencyKey);
         var response = createdTask.ToResponseDto();
 
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = response.Id }, response);
+        return CreatedAtRoute("GetManagementTaskById", new { id = response.Id }, response);
     }
 
     [HttpPut("{id:guid}")]
