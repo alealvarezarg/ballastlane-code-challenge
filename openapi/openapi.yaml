@@ -1,0 +1,252 @@
+openapi: 3.0.3
+info:
+  title: Task Management System API
+  version: 1.0.0
+  description: Canonical OpenAPI contract for management task CRUD endpoints.
+paths:
+  /management-tasks:
+    get:
+      summary: Get all management tasks
+      operationId: getManagementTasks
+      responses:
+        '200':
+          description: Task collection returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagementTaskResponseDto'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+    post:
+      summary: Create a management task
+      operationId: createManagementTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateManagementTaskRequestDto'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagementTaskResponseDto'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+  /management-tasks/{id}:
+    get:
+      summary: Get a management task by identifier
+      operationId: getManagementTaskById
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagementTaskResponseDto'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+    put:
+      summary: Update a management task
+      operationId: updateManagementTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateManagementTaskRequestDto'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagementTaskResponseDto'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+    delete:
+      summary: Delete a management task
+      operationId: deleteManagementTask
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Task deleted
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+components:
+  schemas:
+    CreateManagementTaskRequestDto:
+      type: object
+      required:
+        - title
+        - description
+        - status
+        - dueDate
+        - userId
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: integer
+          enum: [0, 1, 2]
+        dueDate:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+    UpdateManagementTaskRequestDto:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - dueDate
+        - userId
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: integer
+          enum: [0, 1, 2]
+        dueDate:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+    ManagementTaskResponseDto:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - dueDate
+        - userId
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: integer
+          enum: [0, 1, 2]
+        dueDate:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+    ErrorResponseDto:
+      type: object
+      required:
+        - statusCode
+        - message
+        - traceId
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        traceId:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDto'
+    ValidationErrorDto:
+      type: object
+      required:
+        - propertyName
+        - message
+      properties:
+        propertyName:
+          type: string
+        message:
+          type: string

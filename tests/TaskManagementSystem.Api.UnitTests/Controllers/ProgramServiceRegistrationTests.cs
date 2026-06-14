@@ -1,0 +1,52 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
+using TaskManagementSystem.Api;
+using TaskManagementSystem.Api.ExceptionHandling;
+using TaskManagementSystem.Api.Models;
+using TaskManagementSystem.Application;
+using TaskManagementSystem.Application.Abstractions;
+using TaskManagementSystem.Infrastructure;
+using TaskManagementSystem.Infrastructure.Database;
+
+namespace TaskManagementSystem.Api.UnitTests.Controllers;
+
+public sealed class ProgramServiceRegistrationTests
+{
+    [Fact]
+    public void AddTaskManagementApi_ShouldRegisterExpectedServices()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{LiteDbSettings.SectionName}:ConnectionString"] = "Filename=test-api.db;Connection=shared",
+                [$"{LiteDbSettings.SectionName}:TasksCollectionName"] = "management_tasks"
+            })
+            .Build();
+
+        services.AddApplicationDependencies();
+        services.AddInfrastructureDependencies(configuration);
+        services.AddTaskManagementApi();
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IManagementTaskService) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(LiteDbContext) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<CreateManagementTaskRequestDto>));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IValidator<UpdateManagementTaskRequestDto>));
+
+        services.ShouldContain(descriptor =>
+            descriptor.ServiceType == typeof(IExceptionHandler) &&
+            descriptor.ImplementationType == typeof(GlobalExceptionHandler));
+    }
+}
