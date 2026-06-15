@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
-import { ManagementTask, ManagementTaskSummary } from '@app/shared/models/task.models';
+import { ManagementTask } from '@app/shared/models/task.models';
 
 @Component({
   selector: 'app-task-summary',
@@ -58,14 +58,6 @@ import { ManagementTask, ManagementTaskSummary } from '@app/shared/models/task.m
     .summary-card--completed mat-card-content{
       color:#15803d;
     }
-    .summary-card--archived{
-      background:#f8fafc !important;
-      border-color:#cbd5e1 !important;
-    }
-    .summary-card--archived mat-card-title,
-    .summary-card--archived mat-card-content{
-      color:#475569;
-    }
     .summary-card--total{
       background:#f5f3ff !important;
       border-color:#c4b5fd !important;
@@ -78,22 +70,18 @@ import { ManagementTask, ManagementTaskSummary } from '@app/shared/models/task.m
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TaskSummaryComponent {
-  readonly summary = input<ManagementTaskSummary | null>(null);
   readonly tasks = input<ManagementTask[]>([]);
 
   protected readonly summaryItems = computed(() => {
-    const summary = this.summary();
     const tasks = this.tasks();
     const findCount = (status: 'Pending' | 'InProgress' | 'Completed') =>
-      summary?.statuses.find((item) => item.status === status)?.count ?? 0;
-    const archivedCount = tasks.filter((task) => task.isArchived).length;
+      tasks.filter((task) => task.status === status).length;
 
     return [
       { label: 'InProgress', count: findCount('InProgress'), className: 'summary-card--inprogress' },
       { label: 'Pending', count: findCount('Pending'), className: 'summary-card--pending' },
       { label: 'Completed', count: findCount('Completed'), className: 'summary-card--completed' },
-      { label: 'Archived', count: archivedCount, className: 'summary-card--archived' },
-      { label: 'Total', count: findCount('Pending') + findCount('InProgress') + findCount('Completed') + archivedCount, className: 'summary-card--total' }
+      { label: 'Total', count: findCount('Pending') + findCount('InProgress') + findCount('Completed'), className: 'summary-card--total' }
     ];
   });
 }

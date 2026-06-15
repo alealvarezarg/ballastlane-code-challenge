@@ -6,6 +6,8 @@ public interface IManagementUserRepository
 {
     Task<ManagementUser> CreateAsync(ManagementUser user);
 
+    Task<IReadOnlyCollection<ManagementUser>> GetAllAsync();
+
     Task<ManagementUser?> GetByIdAsync(Guid id);
 
     Task<ManagementUser?> GetByEmailAsync(string email);

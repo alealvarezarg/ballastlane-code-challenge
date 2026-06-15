@@ -17,6 +17,16 @@ public sealed class ManagementUserController : ControllerBase
     }
 
     [AllowAnonymous]
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyCollection<ManagementUserResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyCollection<ManagementUserResponseDto>>> GetAllAsync()
+    {
+        var users = await _managementUserService.GetAllAsync();
+
+        return Ok(users.Select(user => user.ToResponseDto()).ToArray());
+    }
+
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(typeof(ManagementUserResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
@@ -26,7 +36,7 @@ public sealed class ManagementUserController : ControllerBase
         var createdUser = await _managementUserService.CreateAsync(request.Username, request.Email, request.Password);
         var response = createdUser.ToResponseDto();
 
-        return CreatedAtRoute("GetManagementUserById", new { id = response.Id }, response);
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 
     [AllowAnonymous]
@@ -41,15 +51,4 @@ public sealed class ManagementUserController : ControllerBase
         return Ok(authenticatedUser.ToResponseDto());
     }
 
-    [AllowAnonymous]
-    [HttpGet("{id:guid}", Name = "GetManagementUserById")]
-    [ProducesResponseType(typeof(ManagementUserResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ManagementUserResponseDto>> GetByIdAsync(Guid id)
-    {
-        var user = await _managementUserService.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException($"ManagementUser with id '{id}' was not found.");
-
-        return Ok(user.ToResponseDto());
-    }
 }

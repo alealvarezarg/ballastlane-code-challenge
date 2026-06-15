@@ -59,9 +59,9 @@ public sealed class ManagementUserService : IManagementUserService
         return authenticatedUser;
     }
 
-    public async Task<ManagementUser?> GetByIdAsync(Guid id)
+    public async Task<IReadOnlyCollection<ManagementUser>> GetAllAsync()
     {
-        return await _repository.GetByIdAsync(id);
+        return await _repository.GetAllAsync();
     }
 
     public async Task<bool> ExistsAsync(Guid id)

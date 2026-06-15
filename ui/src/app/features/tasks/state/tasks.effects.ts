@@ -32,19 +32,6 @@ export class TasksEffects {
     )
   );
 
-  readonly loadSummary$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(tasksActions.summaryRequested),
-      withLatestFrom(this.store.select(selectTaskQuery)),
-      exhaustMap(([, query]) =>
-        this.tasksApiService.getSummary(query.includeArchived).pipe(
-          map((summary) => tasksActions.summarySucceeded({ summary })),
-          catchError((error) => of(tasksActions.summaryFailed({ error: mapHttpError(error) })))
-        )
-      )
-    )
-  );
-
   readonly createTask$ = createEffect(() =>
     this.actions$.pipe(
       ofType(tasksActions.createRequested),
@@ -90,6 +77,18 @@ export class TasksEffects {
           catchError((error) => of(tasksActions.archiveFailed({ error: mapHttpError(error) })))
         )
       )
+    )
+  );
+
+  readonly refreshTasksView$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(
+        tasksActions.createSucceeded,
+        tasksActions.updateSucceeded,
+        tasksActions.statusSucceeded,
+        tasksActions.archiveSucceeded
+      ),
+      exhaustMap(() => of(tasksActions.loadRequested({})))
     )
   );
 

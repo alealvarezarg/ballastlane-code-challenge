@@ -240,6 +240,18 @@ components:
           type: string
 paths:
   /management-users:
+    get:
+      summary: Retrieve all management users for testing
+      operationId: getManagementUsersForTesting
+      responses:
+        '200':
+          description: Management users returned for testing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagementUserResponseDto'
     post:
       summary: Create a management user
       operationId: createManagementUser
@@ -297,30 +309,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseDto'
-  /management-users/{id}:
-    get:
-      summary: Retrieve a management user by identifier for testing
-      operationId: getManagementUserById
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Management user returned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ManagementUserResponseDto'
-        '404':
-          description: Management user not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseDto'
   /management-tasks:
     get:
       summary: Retrieve management tasks
@@ -341,16 +329,6 @@ paths:
           name: search
           schema:
             type: string
-        - in: query
-          name: sortBy
-          schema:
-            type: string
-            enum: [title, status, dueDate]
-        - in: query
-          name: sortDirection
-          schema:
-            type: string
-            enum: [asc, desc]
         - in: query
           name: page
           schema:

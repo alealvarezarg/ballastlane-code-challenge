@@ -6,17 +6,33 @@
         <p>Work with the existing API only: query, create, update, change status, and archive tasks.</p>
       </div>
       <div class="tasks-hero__actions">
-        <button class="tasks-hero__action" mat-stroked-button type="button" (click)="openFiltersDialog()">
+        <button class="tasks-hero__action" [class.tasks-hero__action--active]="hasActiveFilters()" mat-stroked-button type="button" (click)="openFiltersDialog()">
           Search and filters
         </button>
-        <button class="tasks-hero__action" mat-flat-button color="primary" type="button" (click)="openCreateTaskDialog()">
+        <button class="tasks-hero__action" mat-stroked-button type="button" (click)="openCreateTaskDialog()">
           Create task
         </button>
       </div>
     </div>
+    @if (hasActiveFilters()) {
+      <div class="tasks-hero__filters">
+        <div class="tasks-hero__filters-header">
+          <span class="tasks-hero__filters-label">Applied filters</span>
+          <span class="tasks-hero__filters-note">Visible from this screen so the user does not need to reopen the modal.</span>
+        </div>
+        <div class="tasks-hero__filter-list">
+          @for (filter of activeFilters(); track filter.label) {
+            <span class="tasks-hero__filter-chip">
+              <span class="tasks-hero__filter-chip-key">{{ filter.label }}:</span>
+              <span class="tasks-hero__filter-chip-value">{{ filter.value }}</span>
+            </span>
+          }
+        </div>
+      </div>
+    }
   </div>
 
-  <app-task-summary [summary]="summary()" [tasks]="tasks()"></app-task-summary>
+  <app-task-summary [tasks]="tasks()"></app-task-summary>
 
   @if (loadStatus().loading) {
     <app-page-state [loading]="true" title="Loading tasks" message="Fetching the current task view."></app-page-state>
@@ -29,6 +45,7 @@
         [totalCount]="totalCount()"
         (archive)="archiveTask($event)"
         (delete)="archiveTask($event)"
+        (edit)="editTask($event)"
         (statusChange)="changeStatus($event)"
         (pageChange)="changePage($event)"
         (pageSizeChange)="changePageSize($event)"></app-task-list>
@@ -65,9 +82,9 @@
   <section class="tasks-dialog">
     <div class="tasks-dialog__header">
       <div>
-        <h2 class="tasks-dialog__title">{{ isEditing() ? 'Update task' : 'Create task' }}</h2>
+        <h2 class="tasks-dialog__title">{{ isEditing() ? 'Edit task' : 'Create task' }}</h2>
         <p class="tasks-dialog__copy">
-          {{ isEditing() ? 'Adjust the selected task and save the change.' : 'Capture the new task details in a focused modal.' }}
+          {{ isEditing() ? 'Adjust the selected task details in this focused modal and save the change.' : 'Capture the new task details in a focused modal.' }}
         </p>
       </div>
       <button class="tasks-dialog__close" mat-stroked-button type="button" aria-label="Close task editor" (click)="cancelTaskEditor()">X</button>
@@ -78,8 +95,10 @@
     <div class="tasks-dialog__body">
       <app-task-form
         [form]="taskForm"
-        [submitLabel]="isEditing() ? 'Update task' : 'Create task'"
+        [submitLabel]="isEditing() ? 'Update' : 'Create'"
+        clearLabel="Clear"
         (save)="saveTask()"
+        (clear)="clearTaskEditorForm()"
         (cancel)="cancelTaskEditor()"></app-task-form>
     </div>
   </section>

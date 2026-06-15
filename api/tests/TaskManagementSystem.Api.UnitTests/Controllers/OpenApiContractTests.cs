@@ -20,7 +20,10 @@ public sealed class OpenApiContractTests
         canonicalContent.ShouldBe(mirroredContent);
         canonicalContent.ShouldContain("/management-users");
         canonicalContent.ShouldContain("/management-users/login");
+        canonicalContent.ShouldNotContain("/management-users/{id}");
         canonicalContent.ShouldContain("/management-tasks");
+        canonicalContent.ShouldNotContain("sortBy");
+        canonicalContent.ShouldNotContain("sortDirection");
         canonicalContent.ShouldContain("BearerAuth");
         canonicalContent.ShouldContain("ManagementTaskResponseDto");
         canonicalContent.ShouldContain("ManagementTaskSummaryResponseDto");

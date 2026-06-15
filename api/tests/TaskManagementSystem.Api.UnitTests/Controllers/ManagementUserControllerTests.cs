@@ -1,4 +1,5 @@
 using FakeItEasy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using TaskManagementSystem.Api.Controllers;
@@ -21,6 +22,23 @@ public sealed class ManagementUserControllerTests
     }
 
     [Fact]
+    public async Task GetAllAsync_ShouldReturnUsersWithoutPasswordFields()
+    {
+        var users = new[]
+        {
+            new ManagementUser(Guid.NewGuid(), "manager", "manager@example.com", "hashed-password")
+        };
+        A.CallTo(() => _managementUserService.GetAllAsync()).Returns(users);
+
+        var result = await _controller.GetAllAsync();
+
+        var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
+        var response = okResult.Value.ShouldBeOfType<ManagementUserResponseDto[]>();
+        response.Length.ShouldBe(1);
+        response[0].Email.ShouldBe("manager@example.com");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldReturnCreatedAtRoute()
     {
         var request = new CreateManagementUserRequestDto
@@ -35,8 +53,8 @@ public sealed class ManagementUserControllerTests
 
         var result = await _controller.CreateAsync(request);
 
-        var createdResult = result.Result.ShouldBeOfType<CreatedAtRouteResult>();
-        createdResult.RouteName.ShouldBe("GetManagementUserById");
+        var createdResult = result.Result.ShouldBeOfType<ObjectResult>();
+        createdResult.StatusCode.ShouldBe(StatusCodes.Status201Created);
         var response = createdResult.Value.ShouldBeOfType<ManagementUserResponseDto>();
         response.Id.ShouldBe(user.Id);
         response.Email.ShouldBe(user.Email);
@@ -71,20 +89,6 @@ public sealed class ManagementUserControllerTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ShouldReturnOkWithResponseDto()
-    {
-        var user = new ManagementUser(Guid.NewGuid(), "manager", "manager@example.com", "hashed-password");
-        A.CallTo(() => _managementUserService.GetByIdAsync(user.Id)).Returns(user);
-
-        var result = await _controller.GetByIdAsync(user.Id);
-
-        var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
-        var response = okResult.Value.ShouldBeOfType<ManagementUserResponseDto>();
-        response.Id.ShouldBe(user.Id);
-        response.Username.ShouldBe(user.Username);
-    }
-
-    [Fact]
     public void ManagementUserResponseDto_ShouldNotExposePasswordFields()
     {
         var propertyNames = typeof(ManagementUserResponseDto)
@@ -96,14 +100,4 @@ public sealed class ManagementUserControllerTests
         propertyNames.ShouldNotContain("PasswordHash");
     }
 
-    [Fact]
-    public async Task GetByIdAsync_ShouldThrowKeyNotFoundException_WhenUserDoesNotExist()
-    {
-        var id = Guid.NewGuid();
-        A.CallTo(() => _managementUserService.GetByIdAsync(id)).Returns(Task.FromResult<ManagementUser?>(null));
-
-        var exception = await Should.ThrowAsync<KeyNotFoundException>(() => _controller.GetByIdAsync(id));
-
-        exception.Message.ShouldContain(id.ToString());
-    }
 }

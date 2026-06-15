@@ -14,10 +14,7 @@ body {
   margin: 0;
   min-width: 0;
   font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.08), transparent 28%),
-    var(--app-background);
+  background: var(--app-background);
   color: var(--app-on-surface);
   overflow-x: hidden;
 }
@@ -107,6 +104,28 @@ a {
   --mdc-snackbar-container-color: #eff6ff;
   --mdc-snackbar-supporting-text-color: #1d4ed8;
   --mat-snack-bar-button-color: #1d4ed8;
+}
+
+.mat-mdc-snack-bar-container.success-snackbar,
+.mat-mdc-snack-bar-container.error-snackbar,
+.mat-mdc-snack-bar-container.info-snackbar {
+  box-shadow: var(--app-shadow) !important;
+}
+
+.mat-mdc-snack-bar-container.success-snackbar .mdc-snackbar__surface,
+.mat-mdc-snack-bar-container.error-snackbar .mdc-snackbar__surface,
+.mat-mdc-snack-bar-container.info-snackbar .mdc-snackbar__surface {
+  background: var(--mdc-snackbar-container-color) !important;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--app-shadow) !important;
+  opacity: 1 !important;
+}
+
+.mat-mdc-snack-bar-container.success-snackbar .mdc-snackbar__label,
+.mat-mdc-snack-bar-container.error-snackbar .mdc-snackbar__label,
+.mat-mdc-snack-bar-container.info-snackbar .mdc-snackbar__label {
+  color: var(--mdc-snackbar-supporting-text-color) !important;
 }
 
 .mat-mdc-progress-spinner {

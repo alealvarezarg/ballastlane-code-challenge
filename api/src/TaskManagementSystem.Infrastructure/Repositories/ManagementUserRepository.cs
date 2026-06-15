@@ -20,6 +20,16 @@ public sealed class ManagementUserRepository : IManagementUserRepository
         return Task.FromResult(document.ToDomain());
     }
 
+    public Task<IReadOnlyCollection<ManagementUser>> GetAllAsync()
+    {
+        IReadOnlyCollection<ManagementUser> users = _context.Users
+            .FindAll()
+            .Select(document => document.ToDomain())
+            .ToArray();
+
+        return Task.FromResult(users);
+    }
+
     public Task<ManagementUser?> GetByIdAsync(Guid id)
     {
         var document = _context.Users.FindById(id);

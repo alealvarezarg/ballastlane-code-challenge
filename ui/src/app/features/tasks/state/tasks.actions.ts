@@ -1,7 +1,7 @@
-import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { createActionGroup, props } from '@ngrx/store';
 
 import { ApiErrorState } from '@app/shared/models/api-error.models';
-import { ManagementTask, ManagementTaskSummary, ManagementTaskStatus, TaskQueryState } from '@app/shared/models/task.models';
+import { ManagementTask, ManagementTaskStatus, TaskQueryState } from '@app/shared/models/task.models';
 
 export const tasksActions = createActionGroup({
   source: 'Tasks',
@@ -9,9 +9,6 @@ export const tasksActions = createActionGroup({
     'Load Requested': props<{ query?: Partial<TaskQueryState> }>(),
     'Load Succeeded': props<{ items: ManagementTask[]; totalCount: number }>(),
     'Load Failed': props<{ error: ApiErrorState }>(),
-    'Summary Requested': emptyProps(),
-    'Summary Succeeded': props<{ summary: ManagementTaskSummary }>(),
-    'Summary Failed': props<{ error: ApiErrorState }>(),
     'Select Task': props<{ task: ManagementTask | null }>(),
     'Create Requested': props<{ task: Partial<ManagementTask> }>(),
     'Create Succeeded': props<{ task: ManagementTask }>(),

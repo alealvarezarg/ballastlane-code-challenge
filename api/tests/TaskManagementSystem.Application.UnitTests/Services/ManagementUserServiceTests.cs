@@ -101,14 +101,17 @@ public sealed class ManagementUserServiceTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ShouldReturnRepositoryUser()
+    public async Task GetAllAsync_ShouldReturnRepositoryUsers()
     {
-        var user = new ManagementUser(Guid.NewGuid(), "manager", "manager@example.com", "hashed-password");
-        A.CallTo(() => _repository.GetByIdAsync(user.Id)).Returns(user);
+        IReadOnlyCollection<ManagementUser> users =
+        [
+            new ManagementUser(Guid.NewGuid(), "manager", "manager@example.com", "hashed-password")
+        ];
+        A.CallTo(() => _repository.GetAllAsync()).Returns(users);
 
-        var result = await _service.GetByIdAsync(user.Id);
+        var result = await _service.GetAllAsync();
 
-        result.ShouldBe(user);
+        result.ShouldBe(users);
     }
 
     [Fact]

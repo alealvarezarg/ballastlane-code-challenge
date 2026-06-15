@@ -38,6 +38,21 @@ public sealed class ManagementUserRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAllAsync_ShouldReturnAllUsers()
+    {
+        var firstUser = CreateUser();
+        var secondUser = new ManagementUser(Guid.NewGuid(), "manager-2", "manager2@example.com", "hashed-password-2");
+        await _repository.CreateAsync(firstUser);
+        await _repository.CreateAsync(secondUser);
+
+        var result = await _repository.GetAllAsync();
+
+        result.Count.ShouldBe(2);
+        result.ShouldContain(user => user.Email == firstUser.Email);
+        result.ShouldContain(user => user.Email == secondUser.Email);
+    }
+
+    [Fact]
     public async Task GetByEmailAsync_ShouldReturnMatchingUser()
     {
         var user = CreateUser();

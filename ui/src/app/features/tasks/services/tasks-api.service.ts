@@ -7,7 +7,6 @@ import { AppEnvironment } from '@app/shared/models/app-environment.model';
 import {
   CreateManagementTaskRequest,
   ManagementTask,
-  ManagementTaskSummary,
   PagedManagementTaskResponse,
   TaskQueryState,
   UpdateManagementTaskRequest,
@@ -25,12 +24,6 @@ export class TasksApiService {
   queryTasks(query: TaskQueryState): Observable<PagedManagementTaskResponse> {
     return this.httpClient.get<PagedManagementTaskResponse>(`${this.environment.apiBaseUrl}/management-tasks`, {
       params: toTaskQueryParams(query)
-    });
-  }
-
-  getSummary(includeArchived: boolean): Observable<ManagementTaskSummary> {
-    return this.httpClient.get<ManagementTaskSummary>(`${this.environment.apiBaseUrl}/management-tasks/summary`, {
-      params: { includeArchived }
     });
   }
 

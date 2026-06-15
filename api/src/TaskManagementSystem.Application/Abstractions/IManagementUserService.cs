@@ -9,7 +9,7 @@ public interface IManagementUserService
 
     Task<AuthenticatedManagementUser> LoginAsync(string email, string password);
 
-    Task<ManagementUser?> GetByIdAsync(Guid id);
+    Task<IReadOnlyCollection<ManagementUser>> GetAllAsync();
 
     Task<bool> ExistsAsync(Guid id);
 }

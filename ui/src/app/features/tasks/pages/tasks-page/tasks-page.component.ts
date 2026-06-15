@@ -7,8 +7,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 
+import { AuthSessionService } from '@app/core/services/auth-session.service';
 import { PageStateComponent } from '@app/shared/components/page-state/page-state.component';
-import { ManagementTask } from '@app/shared/models/task.models';
+import { ManagementTask, TaskQueryState } from '@app/shared/models/task.models';
 import { toDateInputValue } from '@app/shared/utils/date-format.util';
 
 import { createTaskForm } from '../../validators/task-form.validators';
@@ -18,7 +19,7 @@ import { TaskListComponent } from '../../components/task-list/task-list.componen
 import { TaskQueryBarComponent } from '../../components/task-query-bar/task-query-bar.component';
 import { TaskSummaryComponent } from '../../components/task-summary/task-summary.component';
 import { tasksActions } from '../../state/tasks.actions';
-import { selectSelectedTask, selectTaskLoadStatus, selectTaskMutationStatus, selectTaskQuery, selectTaskSummary, selectTaskTotalCount, selectTasks } from '../../state/tasks.selectors';
+import { selectSelectedTask, selectTaskLoadStatus, selectTaskMutationStatus, selectTaskQuery, selectTaskTotalCount, selectTasks } from '../../state/tasks.selectors';
 
 @Component({
   selector: 'app-tasks-page',
@@ -69,6 +70,63 @@ import { selectSelectedTask, selectTaskLoadStatus, selectTaskMutationStatus, sel
       border-radius:999px;
       font-weight:700;
       white-space:nowrap;
+    }
+    .tasks-hero__action--active{
+      border-color:rgba(37, 99, 235, 0.18) !important;
+      background:rgba(37, 99, 235, 0.12) !important;
+      color:var(--app-primary) !important;
+      box-shadow:0 14px 28px rgba(37, 99, 235, 0.12) !important;
+    }
+    .tasks-hero__filters{
+      display:grid;
+      gap:0.65rem;
+      margin-top:1rem;
+      padding-top:1rem;
+      border-top:1px solid rgba(148, 163, 184, 0.22);
+    }
+    .tasks-hero__filters-header{
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+      flex-wrap:wrap;
+    }
+    .tasks-hero__filters-label{
+      font-size:0.82rem;
+      font-weight:800;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      color:var(--app-on-muted);
+    }
+    .tasks-hero__filters-note{
+      color:var(--app-on-muted);
+      font-size:0.92rem;
+    }
+    .tasks-hero__filter-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.75rem;
+    }
+    .tasks-hero__filter-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:0.45rem;
+      min-height:38px;
+      padding:0.4rem 0.8rem;
+      border-radius:999px;
+      border:1px solid rgba(37, 99, 235, 0.14);
+      background:rgba(255, 255, 255, 0.72);
+      box-shadow:0 10px 22px rgba(15, 23, 42, 0.06);
+      color:var(--app-on-surface);
+      font-size:0.92rem;
+      line-height:1.3;
+    }
+    .tasks-hero__filter-chip-key{
+      color:var(--app-on-muted);
+      font-weight:700;
+    }
+    .tasks-hero__filter-chip-value{
+      font-weight:700;
+      color:var(--app-primary);
     }
     .tasks-dialog{
       display:grid;
@@ -182,6 +240,7 @@ export class TasksPageComponent {
   private readonly store = inject(Store);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(MatDialog);
+  private readonly authSession = inject(AuthSessionService);
   private readonly filtersDialogTemplate = viewChild.required<TemplateRef<unknown>>('filtersDialog');
   private readonly taskEditorDialogTemplate = viewChild.required<TemplateRef<unknown>>('taskEditorDialog');
   private filtersDialogRef: MatDialogRef<unknown> | null = null;
@@ -191,17 +250,22 @@ export class TasksPageComponent {
   protected readonly taskForm = createTaskForm();
   protected readonly queryForm = createTaskQueryForm();
   protected readonly tasks = this.store.selectSignal(selectTasks);
-  protected readonly summary = this.store.selectSignal(selectTaskSummary);
   protected readonly query = this.store.selectSignal(selectTaskQuery);
   protected readonly totalCount = this.store.selectSignal(selectTaskTotalCount);
   protected readonly loadStatus = this.store.selectSignal(selectTaskLoadStatus);
   protected readonly mutationStatus = this.store.selectSignal(selectTaskMutationStatus);
   protected readonly selectedTask = this.store.selectSignal(selectSelectedTask);
   protected readonly isEditing = computed(() => !!this.selectedTask());
+  protected readonly activeFilters = computed(() => this.buildActiveFilters(this.query()));
+  protected readonly hasActiveFilters = computed(() => this.activeFilters().length > 0);
+  protected readonly currentUserId = computed(() => this.authSession.session()?.user.id ?? '');
 
   constructor() {
-    this.store.dispatch(tasksActions.loadRequested({}));
-    this.store.dispatch(tasksActions.summaryRequested());
+    this.store.dispatch(tasksActions.loadRequested({
+      query: {
+        userId: this.currentUserId()
+      }
+    }));
 
     this.store.select(selectTaskQuery)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -209,7 +273,6 @@ export class TasksPageComponent {
         this.queryForm.patchValue({
           search: query.search ?? '',
           status: (query.status ?? '') as '' | 'Pending' | 'InProgress' | 'Completed',
-          userId: query.userId ?? '',
           sortBy: (query.sortBy ?? '') as '' | 'title' | 'status' | 'dueDate',
           sortDirection: (query.sortDirection ?? '') as '' | 'asc' | 'desc',
           pageSize: query.pageSize ?? 10,
@@ -255,7 +318,7 @@ export class TasksPageComponent {
       query: {
         search: value.search || undefined,
         status: value.status || undefined,
-        userId: value.userId || undefined,
+        userId: this.currentUserId(),
         sortBy: value.sortBy || undefined,
         sortDirection: undefined,
         pageSize: value.pageSize ?? 10,
@@ -263,7 +326,6 @@ export class TasksPageComponent {
         includeArchived: value.includeArchived
       }
     }));
-    this.store.dispatch(tasksActions.summaryRequested());
     this.closeFiltersDialog();
   }
 
@@ -271,7 +333,6 @@ export class TasksPageComponent {
     this.queryForm.reset({
       search: '',
       status: '',
-      userId: '',
       sortBy: '',
       sortDirection: '',
       pageSize: 10,
@@ -310,8 +371,7 @@ export class TasksPageComponent {
       title: task.title,
       description: task.description,
       status: task.status,
-      dueDate: toDateInputValue(task.dueDate),
-      userId: task.userId
+      dueDate: toDateInputValue(task.dueDate)
     });
     this.openTaskEditorDialog();
   }
@@ -342,7 +402,7 @@ export class TasksPageComponent {
       description: value.description,
       status: value.status,
       dueDate: new Date(value.dueDate).toISOString(),
-      userId: value.userId,
+      userId: this.currentUserId(),
       isArchived: false,
       archivedAt: null
     };
@@ -369,6 +429,18 @@ export class TasksPageComponent {
     this.closeTaskEditorOnSuccess = false;
   }
 
+  clearTaskEditorForm(): void {
+    const selectedTask = this.selectedTask();
+
+    this.taskForm.reset({
+      id: selectedTask?.id ?? '',
+      title: '',
+      description: '',
+      status: selectedTask?.status ?? 'Pending',
+      dueDate: ''
+    });
+  }
+
   resetEditor(): void {
     this.store.dispatch(tasksActions.selectTask({ task: null }));
     this.taskForm.reset({
@@ -376,8 +448,42 @@ export class TasksPageComponent {
       title: '',
       description: '',
       status: 'Pending',
-      dueDate: '',
-      userId: ''
+      dueDate: ''
     });
+  }
+
+  private buildActiveFilters(query: TaskQueryState): Array<{ label: string; value: string }> {
+    const filters: Array<{ label: string; value: string }> = [];
+
+    if (query.search?.trim()) {
+      filters.push({ label: 'Search', value: query.search.trim() });
+    }
+
+    if (query.status) {
+      filters.push({ label: 'Status', value: query.status });
+    }
+
+    if (query.sortBy) {
+      filters.push({ label: 'Sort by', value: this.formatSortBy(query.sortBy) });
+    }
+
+    if (!query.includeArchived) {
+      filters.push({ label: 'Archived', value: 'Hidden' });
+    }
+
+    return filters;
+  }
+
+  private formatSortBy(sortBy: NonNullable<TaskQueryState['sortBy']>): string {
+    switch (sortBy) {
+      case 'dueDate':
+        return 'Due date';
+      case 'title':
+        return 'Title';
+      case 'status':
+        return 'Status';
+      default:
+        return sortBy;
+    }
   }
 }

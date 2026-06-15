@@ -10,10 +10,6 @@ public sealed class ManagementTaskQueryOptions
 
     public string? Search { get; init; }
 
-    public ManagementTaskSortField SortBy { get; init; } = ManagementTaskSortField.DueDate;
-
-    public SortDirection SortDirection { get; init; } = SortDirection.Ascending;
-
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 50;

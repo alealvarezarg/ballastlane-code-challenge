@@ -21,6 +21,7 @@ import { ManagementTask } from '@app/shared/models/task.models';
           </select>
         </div>
         <div class="task-list__pager">
+          <span class="task-list__records">{{ visibleRangeLabel() }}</span>
           <span class="task-list__page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
           <button class="task-list__nav" mat-icon-button type="button" [disabled]="!canGoPrevious()" (click)="goToFirst()" matTooltip="First page" aria-label="First page">
             <span class="task-list__nav-icon" aria-hidden="true">|&lt;</span>
@@ -47,7 +48,6 @@ import { ManagementTask } from '@app/shared/models/task.models';
                 <th>Title</th>
                 <th>Description</th>
                 <th>Due date</th>
-                <th>User Id</th>
                 <th>Status</th>
                 <th>Archived</th>
                 <th class="task-table__actions-col">Actions</th>
@@ -59,7 +59,6 @@ import { ManagementTask } from '@app/shared/models/task.models';
                   <td class="task-table__title">{{ task.title }}</td>
                   <td class="task-table__description">{{ task.description }}</td>
                   <td>{{ task.dueDate | date:'medium' }}</td>
-                  <td>{{ task.userId }}</td>
                   <td>
                     <span class="status-badge" [class]="statusClass(task.status)">{{ task.status }}</span>
                   </td>
@@ -72,6 +71,19 @@ import { ManagementTask } from '@app/shared/models/task.models';
                   </td>
                   <td>
                     <div class="task-table__actions">
+                      <button
+                        class="task-table__icon-action task-table__icon-action--edit"
+                        mat-icon-button
+                        type="button"
+                        [disabled]="task.isArchived"
+                        (click)="edit.emit(task)"
+                        matTooltip="Edit"
+                        aria-label="Edit">
+                        <svg class="task-table__icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M4 20l4.2-1 9.4-9.4a2 2 0 0 0 0-2.8l-.4-.4a2 2 0 0 0-2.8 0L5 15.8 4 20z"></path>
+                          <path d="M13.5 7.5l3 3"></path>
+                        </svg>
+                      </button>
                       <button
                         class="task-table__icon-action task-table__icon-action--primary"
                         mat-icon-button
@@ -131,6 +143,7 @@ import { ManagementTask } from '@app/shared/models/task.models';
           </select>
         </div>
         <div class="task-list__pager">
+          <span class="task-list__records">{{ visibleRangeLabel() }}</span>
           <span class="task-list__page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
           <button class="task-list__nav" mat-icon-button type="button" [disabled]="!canGoPrevious()" (click)="goToFirst()" matTooltip="First page" aria-label="First page">
             <span class="task-list__nav-icon" aria-hidden="true">|&lt;</span>
@@ -174,6 +187,11 @@ import { ManagementTask } from '@app/shared/models/task.models';
     .task-list__page-info{
       color:var(--app-on-muted);
       font-weight:700;
+    }
+    .task-list__records{
+      color:var(--app-on-muted);
+      font-weight:600;
+      white-space:nowrap;
     }
     .task-list__select{
       min-width:96px;
@@ -302,6 +320,11 @@ import { ManagementTask } from '@app/shared/models/task.models';
       color:var(--app-primary) !important;
       background:rgba(37, 99, 235, 0.08) !important;
     }
+    .task-table__icon-action--edit{
+      border-color:rgba(13, 148, 136, 0.2) !important;
+      color:#0f766e !important;
+      background:rgba(20, 184, 166, 0.08) !important;
+    }
     .task-table__icon-action--danger{
       border-color:#fecaca !important;
       color:#b91c1c !important;
@@ -337,6 +360,7 @@ export class TaskListComponent {
   readonly pageSizeOptions = [10, 25, 50, 100];
   @Output() readonly archive = new EventEmitter<string>();
   @Output() readonly delete = new EventEmitter<string>();
+  @Output() readonly edit = new EventEmitter<ManagementTask>();
   @Output() readonly statusChange = new EventEmitter<{ id: string; status: ManagementTask['status'] }>();
   @Output() readonly pageChange = new EventEmitter<number>();
   @Output() readonly pageSizeChange = new EventEmitter<number>();
@@ -344,6 +368,17 @@ export class TaskListComponent {
   protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
   protected readonly canGoPrevious = computed(() => this.currentPage() > 1);
   protected readonly canGoNext = computed(() => this.currentPage() < this.totalPages());
+  protected readonly visibleRangeLabel = computed(() => {
+    const total = this.totalCount();
+
+    if (total === 0) {
+      return 'Showing 0 of 0';
+    }
+
+    const start = (this.currentPage() - 1) * this.pageSize() + 1;
+    const end = Math.min(start + this.tasks().length - 1, total);
+    return `Showing ${start}-${end} of ${total}`;
+  });
 
   statusClass(status: ManagementTask['status']): string {
     return `status-badge--${status.toLowerCase()}`;

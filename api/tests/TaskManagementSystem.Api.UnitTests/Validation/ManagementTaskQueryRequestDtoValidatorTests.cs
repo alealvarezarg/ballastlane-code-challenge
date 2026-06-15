@@ -14,8 +14,6 @@ public sealed class ManagementTaskQueryRequestDtoValidatorTests
     {
         var result = await _validator.ValidateAsync(new ManagementTaskQueryRequestDto
         {
-            SortBy = "title",
-            SortDirection = "asc",
             Page = 1,
             PageSize = 20
         });
@@ -28,8 +26,6 @@ public sealed class ManagementTaskQueryRequestDtoValidatorTests
     {
         var result = await _validator.ValidateAsync(new ManagementTaskQueryRequestDto
         {
-            SortBy = "invalid",
-            SortDirection = "sideways",
             Page = 0,
             PageSize = 0
         });
@@ -43,8 +39,6 @@ public sealed class ManagementTaskQueryRequestDtoValidatorTests
         var result = await _validator.ValidateAsync(new ManagementTaskQueryRequestDto
         {
             Status = (ManagementTaskStatus)999,
-            SortBy = "title",
-            SortDirection = "asc",
             Page = 1,
             PageSize = 20
         });

@@ -198,7 +198,7 @@ public sealed class ManagementTaskService : IManagementTaskService
     private static string GetQueryCacheKey(ManagementTaskQueryOptions options)
     {
         return
-            $"management-tasks:query:{options.Status}:{options.UserId}:{options.Search}:{options.SortBy}:{options.SortDirection}:{options.Page}:{options.PageSize}:{options.IncludeArchived}";
+            $"management-tasks:query:{options.Status}:{options.UserId}:{options.Search}:{options.Page}:{options.PageSize}:{options.IncludeArchived}";
     }
 
     private static string CreateFingerprint(ManagementTask task)

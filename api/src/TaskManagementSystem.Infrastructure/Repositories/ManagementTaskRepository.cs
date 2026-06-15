@@ -164,16 +164,6 @@ public sealed class ManagementTaskRepository : IManagementTaskRepository
                 task.Description.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
-        query = (options.SortBy, options.SortDirection) switch
-        {
-            (ManagementTaskSortField.Title, SortDirection.Ascending) => query.OrderBy(task => task.Title),
-            (ManagementTaskSortField.Title, SortDirection.Descending) => query.OrderByDescending(task => task.Title),
-            (ManagementTaskSortField.Status, SortDirection.Ascending) => query.OrderBy(task => task.Status),
-            (ManagementTaskSortField.Status, SortDirection.Descending) => query.OrderByDescending(task => task.Status),
-            (ManagementTaskSortField.DueDate, SortDirection.Descending) => query.OrderByDescending(task => task.DueDate),
-            _ => query.OrderBy(task => task.DueDate)
-        };
-
-        return query;
+        return query.OrderBy(task => task.DueDate);
     }
 }

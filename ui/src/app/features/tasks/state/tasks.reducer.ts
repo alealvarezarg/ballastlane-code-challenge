@@ -24,10 +24,6 @@ export const tasksFeature = createFeature({
       ...state,
       loadStatus: { loading: false, successMessage: null, error }
     })),
-    on(tasksActions.summarySucceeded, (state, { summary }) => ({
-      ...state,
-      summary
-    })),
     on(tasksActions.selectTask, (state, { task }) => ({
       ...state,
       selectedTask: task
@@ -61,13 +57,9 @@ export const tasksFeature = createFeature({
       selectedTask: null,
       mutationStatus: { loading: false, successMessage: 'Task archived successfully.', error: null }
     })),
-    on(tasksActions.createFailed, tasksActions.updateFailed, tasksActions.statusFailed, tasksActions.archiveFailed, tasksActions.summaryFailed, (state, { error }) => ({
+    on(tasksActions.createFailed, tasksActions.updateFailed, tasksActions.statusFailed, tasksActions.archiveFailed, (state, { error }) => ({
       ...state,
       mutationStatus: { loading: false, successMessage: null, error }
-    })),
-    on(tasksActions.summaryRequested, (state) => ({
-      ...state,
-      mutationStatus: initialRequestStatus()
     }))
   )
 });

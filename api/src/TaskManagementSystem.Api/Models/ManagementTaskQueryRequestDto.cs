@@ -11,10 +11,6 @@ public sealed class ManagementTaskQueryRequestDto
 
     public string? Search { get; set; }
 
-    public string? SortBy { get; set; }
-
-    public string? SortDirection { get; set; }
-
     public int Page { get; set; } = 1;
 
     public int PageSize { get; set; } = 50;
@@ -28,15 +24,6 @@ public sealed class ManagementTaskQueryRequestDto
             Status = Status,
             UserId = UserId,
             Search = Search,
-            SortBy = SortBy?.Trim().ToLowerInvariant() switch
-            {
-                "title" => ManagementTaskSortField.Title,
-                "status" => ManagementTaskSortField.Status,
-                _ => ManagementTaskSortField.DueDate
-            },
-            SortDirection = SortDirection?.Trim().ToLowerInvariant() == "desc"
-                ? Application.Models.SortDirection.Descending
-                : Application.Models.SortDirection.Ascending,
             Page = Page,
             PageSize = PageSize,
             IncludeArchived = IncludeArchived

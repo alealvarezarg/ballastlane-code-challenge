@@ -14,9 +14,9 @@ public sealed class ManagementAuthorizationControllerTests
     }
 
     [Theory]
+    [InlineData(nameof(ManagementUserController.GetAllAsync))]
     [InlineData(nameof(ManagementUserController.CreateAsync))]
     [InlineData(nameof(ManagementUserController.LoginAsync))]
-    [InlineData(nameof(ManagementUserController.GetByIdAsync))]
     public void ManagementUserEndpoints_ShouldAllowAnonymous(string methodName)
     {
         var method = typeof(ManagementUserController).GetMethod(methodName);
