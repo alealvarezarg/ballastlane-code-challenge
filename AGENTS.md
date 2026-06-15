@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/008-api-dto-logging/plan.md`
+`specs/009-management-ui/plan.md`
 <!-- SPECKIT END -->

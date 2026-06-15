@@ -1,0 +1,58 @@
+@if (!isPublicAuthRoute()) {
+  <mat-toolbar class="shell-toolbar">
+    <div class="shell-toolbar__content">
+      <a class="brand" routerLink="/tasks">Task Management System</a>
+      <span class="shell-spacer"></span>
+      @if (authSession.isAuthenticated() && currentUser(); as user) {
+        <div class="profile-shell" #profileShell>
+          <button
+            class="profile-trigger"
+            mat-button
+            type="button"
+            (click)="toggleProfileMenu()"
+            aria-label="Open profile menu"
+            [attr.aria-expanded]="isProfileOpen()">
+            <span class="profile-trigger__avatar">{{ userInitial() }}</span>
+          </button>
+
+          @if (isProfileOpen()) {
+            <div class="profile-menu">
+            <div class="profile-menu__card">
+              <div class="profile-menu__hero">
+                <span class="profile-menu__hero-avatar">{{ userInitial() }}</span>
+                <div class="profile-menu__hero-copy">
+                  <span class="profile-menu__hero-title">{{ user.username }}</span>
+                  <span class="profile-menu__hero-subtitle">{{ user.email }}</span>
+                </div>
+              </div>
+
+              <div class="profile-menu__details">
+                <div class="profile-menu__item">
+                  <span class="profile-menu__item-label">Nombre</span>
+                  <span class="profile-menu__item-value">{{ user.username }}</span>
+                </div>
+                <div class="profile-menu__item">
+                  <span class="profile-menu__item-label">Email</span>
+                  <span class="profile-menu__item-value">{{ user.email }}</span>
+                </div>
+                <div class="profile-menu__item">
+                  <span class="profile-menu__item-label">User ID</span>
+                  <span class="profile-menu__item-value">{{ user.id }}</span>
+                </div>
+              </div>
+
+              <button class="profile-menu__logout" mat-flat-button color="primary" type="button" (click)="logout()">
+                Logout
+              </button>
+            </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </mat-toolbar>
+}
+
+<main class="shell-content" [class.shell-content--auth]="isPublicAuthRoute()">
+  <router-outlet></router-outlet>
+</main>

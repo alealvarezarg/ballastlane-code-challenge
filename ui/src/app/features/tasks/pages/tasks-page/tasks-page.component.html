@@ -1,0 +1,86 @@
+<section class="tasks-layout">
+  <div class="tasks-hero">
+    <div class="tasks-hero__header">
+      <div>
+        <h1>Management Tasks</h1>
+        <p>Work with the existing API only: query, create, update, change status, and archive tasks.</p>
+      </div>
+      <div class="tasks-hero__actions">
+        <button class="tasks-hero__action" mat-stroked-button type="button" (click)="openFiltersDialog()">
+          Search and filters
+        </button>
+        <button class="tasks-hero__action" mat-flat-button color="primary" type="button" (click)="openCreateTaskDialog()">
+          Create task
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-task-summary [summary]="summary()" [tasks]="tasks()"></app-task-summary>
+
+  @if (loadStatus().loading) {
+    <app-page-state [loading]="true" title="Loading tasks" message="Fetching the current task view."></app-page-state>
+  } @else {
+    <div class="tasks-panel">
+      <app-task-list
+        [tasks]="tasks()"
+        [currentPage]="query().page"
+        [pageSize]="query().pageSize"
+        [totalCount]="totalCount()"
+        (archive)="archiveTask($event)"
+        (delete)="archiveTask($event)"
+        (statusChange)="changeStatus($event)"
+        (pageChange)="changePage($event)"
+        (pageSizeChange)="changePageSize($event)"></app-task-list>
+    </div>
+  }
+</section>
+
+<ng-template #filtersDialog>
+  <section class="tasks-dialog">
+    <div class="tasks-dialog__header">
+      <div>
+        <h2 class="tasks-dialog__title">Search and filters</h2>
+        <p class="tasks-dialog__copy">Refine the task list without occupying permanent space on the page.</p>
+      </div>
+      <button class="tasks-dialog__close" mat-stroked-button type="button" aria-label="Close filters" (click)="closeFiltersDialog()">X</button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="tasks-dialog__body">
+      <app-task-query-bar [form]="queryForm" (apply)="applyFilters()"></app-task-query-bar>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="tasks-dialog__footer">
+      <button class="tasks-dialog__action tasks-dialog__action--secondary" mat-stroked-button type="button" (click)="resetFilters()">Clear all filters</button>
+      <button class="tasks-dialog__action tasks-dialog__action--primary" mat-flat-button color="primary" type="button" (click)="applyFilters()">Apply filters</button>
+    </div>
+  </section>
+</ng-template>
+
+<ng-template #taskEditorDialog>
+  <section class="tasks-dialog">
+    <div class="tasks-dialog__header">
+      <div>
+        <h2 class="tasks-dialog__title">{{ isEditing() ? 'Update task' : 'Create task' }}</h2>
+        <p class="tasks-dialog__copy">
+          {{ isEditing() ? 'Adjust the selected task and save the change.' : 'Capture the new task details in a focused modal.' }}
+        </p>
+      </div>
+      <button class="tasks-dialog__close" mat-stroked-button type="button" aria-label="Close task editor" (click)="cancelTaskEditor()">X</button>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="tasks-dialog__body">
+      <app-task-form
+        [form]="taskForm"
+        [submitLabel]="isEditing() ? 'Update task' : 'Create task'"
+        (save)="saveTask()"
+        (cancel)="cancelTaskEditor()"></app-task-form>
+    </div>
+  </section>
+</ng-template>

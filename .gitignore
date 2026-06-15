@@ -49,3 +49,14 @@ Desktop.ini
 
 # Others
 .dotnet/
+.tmp/
+
+# Node / Angular UI
+node_modules/
+dist/
+ui/.angular/
+ui/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

@@ -5,6 +5,8 @@ using TaskManagementSystem.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string UiCorsPolicy = "UiCorsPolicy";
+
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -13,6 +15,15 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services.AddApplicationDependencies();
 builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddTaskManagementApi(builder.Configuration);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(UiCorsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -23,6 +34,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
+app.UseCors(UiCorsPolicy);
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,0 +1,33 @@
+<app-auth-form-shell
+  title="Welcome back"
+  subtitle="Sign in to continue with your task workspace."
+  footer="Only Sign In and Sign Up are available from this screen.">
+  <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="auth-form__intro">
+      Use your registered email address and password to access the protected task area.
+    </p>
+
+    <app-inline-feedback [message]="formMessage()" tone="error"></app-inline-feedback>
+
+    <mat-form-field appearance="outline" floatLabel="always" class="full-width auth-form__field">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" autocomplete="email" placeholder="Email" />
+      <mat-error *ngIf="form.controls.email.errors?.['required']">Email is required.</mat-error>
+      <mat-error *ngIf="form.controls.email.errors?.['email']">Enter a valid email address.</mat-error>
+      <mat-error *ngIf="form.controls.email.errors?.['api']">{{ form.controls.email.getError('api') }}</mat-error>
+    </mat-form-field>
+
+    <app-password-field [control]="form.controls.password"></app-password-field>
+
+    <div class="auth-form__actions">
+      <button class="auth-form__button" type="submit" [disabled]="submitting()">
+        <span class="auth-form__button-content">
+          @if (submitting()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          }
+          <span>{{ submitting() ? 'Signing in...' : 'Sign In' }}</span>
+        </span>
+      </button>
+    </div>
+  </form>
+</app-auth-form-shell>
