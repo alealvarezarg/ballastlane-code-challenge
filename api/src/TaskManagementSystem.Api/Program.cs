@@ -27,6 +27,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+await app.Services.InitializeInfrastructureAsync();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
