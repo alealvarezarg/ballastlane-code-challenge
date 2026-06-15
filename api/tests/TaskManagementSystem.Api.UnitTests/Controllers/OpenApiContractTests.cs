@@ -7,9 +7,9 @@ public sealed class OpenApiContractTests
     [Fact]
     public void CanonicalAndMirroredContracts_ShouldStayInSync()
     {
-        var repositoryRoot = TestPathHelper.GetRepositoryRoot();
-        var canonicalContract = Path.Combine(repositoryRoot, "openapi", "openapi.yaml");
-        var mirroredContract = Path.Combine(repositoryRoot, "specs", "008-api-dto-logging", "contracts", "api-dto-logging.openapi.yaml");
+        var workspaceRoot = TestPathHelper.GetWorkspaceRoot();
+        var canonicalContract = Path.Combine(workspaceRoot, "openapi", "openapi.yaml");
+        var mirroredContract = Path.Combine(workspaceRoot, "specs", "008-api-dto-logging", "contracts", "api-dto-logging.openapi.yaml");
 
         File.Exists(canonicalContract).ShouldBeTrue();
         File.Exists(mirroredContract).ShouldBeTrue();

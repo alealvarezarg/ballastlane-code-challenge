@@ -91,8 +91,8 @@ public sealed class ProgramServiceRegistrationTests
     [Fact]
     public void ProgramConfiguration_ShouldUseSerilogConsoleLogging()
     {
-        var repositoryRoot = TestPathHelper.GetRepositoryRoot();
-        var programFile = Path.Combine(repositoryRoot, "src", "TaskManagementSystem.Api", "Program.cs");
+        var apiRoot = TestPathHelper.GetApiRoot();
+        var programFile = Path.Combine(apiRoot, "src", "TaskManagementSystem.Api", "Program.cs");
 
         File.Exists(programFile).ShouldBeTrue();
 

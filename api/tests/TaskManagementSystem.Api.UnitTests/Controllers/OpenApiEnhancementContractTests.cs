@@ -7,8 +7,8 @@ public sealed class OpenApiEnhancementContractTests
     [Fact]
     public void CanonicalContract_ShouldContainEnhancedManagementTaskRoutes()
     {
-        var repositoryRoot = TestPathHelper.GetRepositoryRoot();
-        var canonicalContract = Path.Combine(repositoryRoot, "openapi", "openapi.yaml");
+        var workspaceRoot = TestPathHelper.GetWorkspaceRoot();
+        var canonicalContract = Path.Combine(workspaceRoot, "openapi", "openapi.yaml");
         var content = File.ReadAllText(canonicalContract).Replace("\r\n", "\n");
 
         content.ShouldContain("/management-tasks/summary");
